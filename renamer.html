@@ -36,6 +36,51 @@
             cursor: col-resize;
             z-index: 100;
         }
+        .right-sidebar {
+            width: 250px;
+            padding: 0;
+            border-left: 1px solid #444444;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: relative;
+            background-color: #EBEBEB;
+            color: black;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 1px solid #444444;
+            height: 36px;
+            box-sizing: border-box;
+            background-color: #1877f2;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .preview-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        #preview-container {
+            flex-grow: 1;
+            padding: 10px;
+            position: relative;
+            overflow-y: auto;
+        }
+        #right-sidebar-resizer {
+            position: absolute;
+            top: 0;
+            left: -5px;
+            width: 10px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 100;
+        }
         #sidebar-scroll-container {
             flex-grow: 1;
             overflow-y: auto;
@@ -111,6 +156,7 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* Prevent the main content from causing page scroll */
         }
         .top-bar {
             padding: 10px 20px 10px 0px;
@@ -132,6 +178,9 @@
             color: white;
             justify-content: space-between;
         }
+        #bottom-bar-info {
+            /* Styles removed to allow text to wrap */
+        }
         .top-bar label {
             margin-right: 10px; /* Add padding between label and dropdown */
         }
@@ -140,6 +189,10 @@
             padding: 20px;
             position: relative;
             overflow: auto;
+            min-width: 0;
+        }
+        #thumbnail-container.list-view-active {
+            padding-top: 40px;
         }
         .thumbnail-wrapper.list-view {
             display: flex;
@@ -154,10 +207,62 @@
             height: 72px;
             margin-right: 10px;
         }
+        .thumbnail-wrapper.list-view {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        .thumbnail-wrapper.list-view .thumbnail {
+            width: 128px;
+            height: 72px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
         .thumbnail-wrapper.list-view .thumbnail-name {
             display: block;
             font-size: 14px;
             color: black;
+            width: 400px; /* Fixed width */
+            min-width: 400px; /* Prevent shrinking */
+            max-width: 400px; /* Prevent growing */
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .new-filename-placeholder, .canvas-name-placeholder {
+            display: none;
+        }
+        .thumbnail-wrapper.list-view .new-filename-placeholder {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            flex: 2 1 0%;
+            text-align: left;
+            margin-left: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            font-style: italic;
+            border-left: 1px solid #ccc;
+            padding-left: 15px;
+            min-height: 20px;
+            word-break: break-all;
+        }
+        .thumbnail-wrapper.list-view .canvas-name-placeholder {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            flex-shrink: 0;
+            width: 100px;
+            text-align: right;
+            margin-left: 15px;
         }
         .thumbnail {
             object-fit: cover;
@@ -229,6 +334,9 @@
             display: none;
             z-index: 2147483647;
         }
+        #filename-builder-modal {
+            z-index: 2500;
+        }
         .landscape-row.selected-landscape {
             outline: 3px dashed blue;
         }
@@ -260,6 +368,10 @@
         }
         .thumbnail-wrapper.selected .thumbnail {
             box-shadow: 0 0 0 3px #007bff, 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .thumbnail-wrapper.list-view.selected {
+            background-color: #d4e8ff;
         }
 
         #multi-select-btn.active {
@@ -596,6 +708,50 @@
             display: block;
             margin-top: 20px;
         }
+
+        #list-view-controls {
+            position: absolute;
+            top: 40px; 
+            left: 20px;
+            z-index: 100;
+        }
+
+        #list-view-cog-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #1877f2;
+        }
+
+        #list-view-dropdown {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #list-view-dropdown label {
+            display: block;
+            color: black;
+        }
+        .list-view-toggle-btn {
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid #444444;
+            border-left: none;
+            background-color: #1877f2;
+            color: #ffffff;
+            border-radius: 0;
+            font-size: 14px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .list-view-toggle-btn.active {
+            background-color: #d93025;
+        }
     </style>
 </head>
 <body>
@@ -611,6 +767,7 @@
                             <input type="text" id="project-username-input" style="width: 100%; box-sizing: border-box; background-color: #ffffff; border: 1px solid #444; color: black; padding: 4px;">
                         </div>
                         <a href="#" id="rename-canvas-btn">Rename Canvas</a>
+                        <a href="#" id="manual-rename-btn">Manual Rename</a>
                         <a href="#" id="scan-for-buttons-btn">Scan for Buttons</a>
                         <a href="#" id="remove-all-buttons-btn">Remove All Buttons</a>
                         <div class="nested-dropdown" id="thumbnails-menu">
@@ -626,6 +783,7 @@
                             <a href="#" id="edit-mode-btn">Edit Mode: Off</a>
                             <a href="#" id="generate-edit-bat-btn">Generate Edit Bat</a>
                         </div>
+                        <a href="#" id="generate-move-rename-script-btn">Generate Move Script</a>
                         <div style="padding: 12px 16px; border-top: 1px solid #ddd;">
                             <label for="num-elements-input" style="display: block; margin-bottom: 5px;">Number of Elements</label>
                             <input type="number" id="num-elements-input" min="1" value="1" style="width: 100%; box-sizing: border-box; background-color: #ffffff; border: 1px solid #444; color: black; padding: 4px;">
@@ -637,6 +795,14 @@
                             <label for="font-size-slider" style="display: block; margin-bottom: 5px;">Button Font Size</label>
                             <input type="range" id="font-size-slider" min="8" max="24" value="14" style="width: 100%;">
                         </div>
+                        <div style="padding: 12px 16px; border-top: 1px solid #ddd;">
+                            <label for="vertical-padding-input" style="display: block; margin-bottom: 5px;">Vertical Padding (px)</label>
+                            <input type="number" id="vertical-padding-input" min="0" value="10" style="width: 100%; box-sizing: border-box; background-color: #ffffff; border: 1px solid #444; color: black; padding: 4px;">
+                        </div>
+                        <div style="padding: 12px 16px; border-top: 1px solid #ddd;">
+                            <label for="horizontal-padding-input" style="display: block; margin-bottom: 5px;">Horizontal Padding (px)</label>
+                            <input type="number" id="horizontal-padding-input" min="0" value="10" style="width: 100%; box-sizing: border-box; background-color: #ffffff; border: 1px solid #444; color: black; padding: 4px;">
+                        </div>
                         <div class="nested-dropdown" id="recent-directories-dropdown">
                             <a href="#">Recent Directories</a>
                             <div class="nested-dropdown-content" id="recent-directories-list">
@@ -645,6 +811,7 @@
                         </div>
                         <a href="#" id="import-project-btn">Import Project</a>
                         <a href="#" id="export-project-btn">Export Project</a>
+                        <a href="#" id="recalculate-suffix-btn">Recalculate Suffix</a>
                     </div>
                 </div>
                 <button id="load-directory-btn">Load Directory</button>
@@ -655,6 +822,8 @@
         </div>
         <div class="main-content">
             <div class="top-bar">
+                <button id="test-hook-load-dir" style="display:none;">Test Hook</button>
+                <button id="test-hook-load-padding-dir" style="display:none;">Test Hook Padding</button>
                 <select id="size-selector">
                     <option value="list">List</option>
                     <option value="0.2">20%</option>
@@ -690,16 +859,53 @@
                     <option value="" disabled hidden>Send to...</option>
                 </select>
                 <button id="close-canvas-btn" disabled>Close Canvas</button>
+                <button id="toggle-last-canvas-btn" style="display: none;">Toggle Last</button>
                 <button id="play-btn" disabled>Play</button>
+                <button id="delete-selected-btn" disabled>Delete</button>
+                <button id="preview-btn">Preview</button>
             </div>
-            <div id="thumbnail-container">
-                <div id="selection-box"></div>
-                <div id="content-spacer" style="position: absolute; top: 0; left: 0; z-index: -1;"></div>
+            <div id="content-area" style="display: flex; flex-grow: 1; overflow: hidden;">
+                <div id="thumbnail-container">
+                    <div id="selection-box"></div>
+                    <div id="content-spacer" style="position: absolute; top: 0; left: 0; z-index: -1;"></div>
+                </div>
+                <div class="right-sidebar" id="right-sidebar" style="display: none;">
+                    <div id="right-sidebar-resizer"></div>
+                    <div class="preview-header">
+                        <h3>Preview</h3>
+                        <button id="play-all-preview-btn" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&#9658;</button>
+                        <select id="preview-size-selector">
+                            <option value="list">List</option>
+                            <option value="0.2">20%</option>
+                            <option value="0.3">30%</option>
+                            <option value="0.4">40%</option>
+                            <option value="0.5" selected>50%</option>
+                            <option value="0.6">60%</option>
+                            <option value="0.7">70%</option>
+                            <option value="0.8">80%</option>
+                            <option value="0.9">90%</option>
+                            <option value="1">100%</option>
+                        </select>
+                    </div>
+                    <div id="preview-container"></div>
+                </div>
             </div>
             <div class="bottom-bar">
-                <div style="display: flex;">
+                <div style="display: flex;" id="bottom-bar-left-controls">
                     <button id="new-filename-btn" style="height: 36px; padding: 0; width: 60px; text-align: center; border: 1px solid #444444; background-color: #1877f2; color: #ffffff; border-radius: 0; font-size: 14px; box-sizing: border-box; cursor: pointer;">New</button>
                     <button id="remove-btn" style="height: 36px; padding: 0 12px; border: 1px solid #444444; border-left: none; background-color: #1877f2; color: #ffffff; border-radius: 0; font-size: 14px; box-sizing: border-box; cursor: pointer;">Remove</button>
+                    <button id="copy-button-btn" style="height: 36px; padding: 0 12px; border: 1px solid #444444; border-left: none; background-color: #1877f2; color: #ffffff; border-radius: 0; font-size: 14px; box-sizing: border-box; cursor: pointer;" disabled>Copy</button>
+                    <button id="rename-btn" style="height: 36px; padding: 0 12px; border: 1px solid #444444; border-left: none; background-color: #1877f2; color: #ffffff; border-radius: 0; font-size: 14px; box-sizing: border-box; cursor: pointer;" disabled>Rename</button>
+                    <button id="toggle-renamed-canvas-btn" style="height: 36px; padding: 0 12px; border: 1px solid #444444; border-left: none; background-color: #1877f2; color: #ffffff; border-radius: 0; font-size: 14px; box-sizing: border-box; cursor: pointer; display: none;">Toggle Renamed</button>
+                    <div id="writing-element-controls" style="display: flex; align-items: center; border: 1px solid #444; border-left: none; padding: 0 5px;">
+                        <input type="checkbox" id="add-writing-element-checkbox" title="Add Writing element">
+                        <input type="number" id="writing-element-number-input" value="1" style="width: 40px; height: 24px; text-align: center; background-color: #ffffff; color: black; border: 1px solid #444;">
+                    </div>
+                    <div id="list-view-button-controls" style="display: none;">
+                        <button id="show-thumbnails-btn" class="list-view-toggle-btn">Show Thumbs</button>
+                        <button id="show-canvas-name-btn" class="list-view-toggle-btn">Show Canvas</button>
+                        <button id="show-new-filename-btn" class="list-view-toggle-btn">Show New Name</button>
+                    </div>
                 </div>
                 <div id="bottom-bar-info" style="flex-grow: 1; text-align: right;"></div>
                 <div id="landscape-buttons" style="display: none;">
@@ -734,7 +940,11 @@
                 <button id="add-element-btn">+</button>
             </div>
 
-            <button id="create-filename-button-btn">Add Button</button>
+            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <button id="create-filename-button-btn">Add Button</button>
+                <button id="clone-filename-button-btn" style="display: none;">Clone Button</button>
+            </div>
+            <input type="hidden" id="editing-button-id">
         </div>
     </div>
 
@@ -800,6 +1010,33 @@
         </div>
     </div>
 
+    <div id="move-rename-script-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Move and Rename PowerShell Script</h2>
+            <p>This script will move and rename your files. Right-click and "Run with PowerShell" in your main video directory.</p>
+            <textarea id="move-rename-batch-script" rows="10" cols="80" readonly></textarea>
+            <button id="copy-move-rename-script-btn">Copy to Clipboard</button>
+            <a id="download-move-rename-script-link" download="move_rename.ps1">
+                <button>Download .ps1 File</button>
+            </a>
+            <button id="reload-move-rename-script-page-btn" style="display: none;">Reload Page</button>
+        </div>
+    </div>
+
+    <div id="orphaned-thumbnails-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Orphaned Thumbnails Found</h2>
+            <p id="orphaned-thumbnails-message"></p>
+            <div id="orphaned-files-list" style="max-height: 150px; overflow-y: auto; background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px; margin-bottom: 10px; color: black;"></div>
+            <button id="delete-orphans-script-btn">Generate Deletion Script</button>
+            <button id="hide-orphans-btn">Hide Them</button>
+            <button id="hide-forever-orphans-btn">Hide Forever</button>
+            <button id="do-nothing-orphans-btn">Do Nothing</button>
+        </div>
+    </div>
+
     <script>
         // --- IndexedDB Helpers ---
         function getDb(key) {
@@ -814,6 +1051,40 @@
                     req.onerror = () => reject(req.error);
                     tx.oncomplete = () => request.result.close();
                 };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function setFileMetadata(dirName, fileName, metadata) {
+            const db = await openMetadataDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction('fileMetadata', 'readwrite');
+                const store = transaction.objectStore('fileMetadata');
+                const request = store.put(metadata, `${dirName}-${fileName}`);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function openMetadataDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('file-metadata-db', 1);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    db.createObjectStore('fileMetadata');
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getFileMetadata(dirName, fileName) {
+            const db = await openMetadataDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction('fileMetadata', 'readonly');
+                const store = transaction.objectStore('fileMetadata');
+                const request = store.get(`${dirName}-${fileName}`);
+                request.onsuccess = () => resolve(request.result);
                 request.onerror = () => reject(request.error);
             });
         }
@@ -839,37 +1110,39 @@
 
         function loadProjectData(dirName) {
             const rawData = localStorage.getItem(`projectData-${dirName}`);
-            if (!rawData) {
-                return {
-                    version: APP_VERSION,
-                    projectUsername: '',
-                    numElements: 1,
-                    fontSize: 14,
-                    customButtonTree: [],
-                    collapseState: {},
-                    buttonVisibility: {},
-                    canvases: null, // Keep canvas data separate for now
-                    layouts: {}
-                };
+            let data = {
+                version: APP_VERSION,
+                projectUsername: '',
+                numElements: 1,
+                fontSize: 14,
+                verticalPadding: 10,
+                horizontalPadding: 10,
+                customButtonTree: [],
+                collapseState: {},
+                buttonVisibility: {},
+                canvases: null,
+                layouts: {},
+                previewSidebarVisible: false,
+                previewSidebarWidth: 250,
+                previewThumbnailSize: '0.5',
+                addWritingElement: false,
+                writingElementNumber: 1,
+                hiddenOrphans: [],
+                listViewShowThumbnails: false,
+                listViewShowCanvasName: false,
+                listViewShowNewFilename: false
+            };
+
+            if (rawData) {
+                try {
+                    const savedData = JSON.parse(rawData);
+                    // Merge saved data, ensuring all keys from the default object are present
+                    data = { ...data, ...savedData };
+                } catch (e) {
+                    console.error("Failed to parse project data, using defaults.", e);
+                }
             }
-            try {
-                const data = JSON.parse(rawData);
-                // Simple migration logic can be added here if data.version !== APP_VERSION
-                return data;
-            } catch (e) {
-                console.error("Failed to parse project data, returning defaults.", e);
-                return {
-                    version: APP_VERSION,
-                    projectUsername: '',
-                    numElements: 1,
-                    fontSize: 14,
-                    customButtonTree: [],
-                    collapseState: {},
-                    buttonVisibility: {},
-                    canvases: null,
-                    layouts: {}
-                };
-            }
+            return data;
         }
 
         function saveProjectData(dirName, data) {
@@ -885,7 +1158,6 @@
         const copyScriptBtn = document.getElementById('copy-script-btn');
         const downloadScriptLink = document.getElementById('download-script-link');
         const reloadPageBtn = document.getElementById('reload-page-btn');
-        const closeModal = document.querySelector('.close');
         const sizeSelector = document.getElementById('size-selector');
         let isLayoutFrozen = false;
         var directoryName = '';
@@ -899,6 +1171,7 @@
         const selectionBox = document.getElementById('selection-box');
         const contentSpacer = document.getElementById('content-spacer');
         let selectedThumbnails = new Set();
+        let selectedPreviewThumbnails = new Set();
         let allVideoFiles = [];
         const playBtn = document.getElementById('play-btn');
         let scanLayouts = {};
@@ -917,6 +1190,7 @@
         const cogBtn = document.getElementById('cog-btn');
         const newFilenameBtn = document.getElementById('new-filename-btn');
         const removeBtn = document.getElementById('remove-btn');
+        const renameBtn = document.getElementById('rename-btn');
         const visibleButtonsBtn = document.getElementById('visible-buttons-btn');
         const visibleButtonsModal = document.getElementById('visible-buttons-modal');
         const visibleButtonsListContainer = document.getElementById('visible-buttons-list-container');
@@ -927,6 +1201,13 @@
         const generateEditThumbnailsNewBtn = document.getElementById('generate-edit-thumbnails-new-btn');
         const editScriptModal = document.getElementById('edit-script-modal');
         const recentDirectoriesDropdown = document.getElementById('recent-directories-dropdown');
+        const listViewButtonControls = document.getElementById('list-view-button-controls');
+        const showThumbnailsBtn = document.getElementById('show-thumbnails-btn');
+        const showCanvasNameBtn = document.getElementById('show-canvas-name-btn');
+        const showNewFilenameBtn = document.getElementById('show-new-filename-btn');
+        const previewBtn = document.getElementById('preview-btn');
+        const rightSidebar = document.getElementById('right-sidebar');
+        const previewContainer = document.getElementById('preview-container');
         
         let buttonsForRemoval = new Set();
         let filenameParts = [];
@@ -937,6 +1218,8 @@
 
         var canvases = new Map();
         let activeCanvasId = 1;
+        let lastActiveCanvasId = null;
+        let lastCanvasIdBeforeRenamed = null;
         let allThumbnails = [];
         let currentDirHandle;
         let landscapeSelectionMode = ''; // 'landscape' or 'landscape-rotate'
@@ -946,14 +1229,20 @@
         const deleteSelections = new Set();
         const editSelections = new Set();
         const playSelections = new Set();
+        let originalPartsForCopyCheck = null;
 
-        function updateRemoveButtonState() {
-            if (buttonsForRemoval.size === 0) {
-                removeBtn.classList.add('disabled-btn');
-                removeBtn.disabled = true;
-            } else {
-                removeBtn.classList.remove('disabled-btn');
-                removeBtn.disabled = false;
+        function updateSidebarActionButtonsState() {
+            const numSelected = buttonsForRemoval.size;
+            const copyBtn = document.getElementById('copy-button-btn');
+
+            // Remove button state
+            removeBtn.disabled = numSelected === 0;
+            removeBtn.classList.toggle('disabled-btn', numSelected === 0);
+
+            // Copy button state
+            if (copyBtn) {
+                copyBtn.disabled = numSelected !== 1;
+                copyBtn.classList.toggle('disabled-btn', numSelected !== 1);
             }
         }
 
@@ -976,6 +1265,10 @@
                 document.title = canvas.name;
                 hideBtn.textContent = canvas.name === 'Hidden' ? 'Unhide' : 'Hide';
                 canvas.thumbnails.forEach(thumb => {
+                    const canvasNamePlaceholder = thumb.querySelector('.canvas-name-placeholder');
+                    if (canvasNamePlaceholder) {
+                        canvasNamePlaceholder.textContent = canvas.name;
+                    }
                     thumbnailContainer.appendChild(thumb);
                 });
             }
@@ -983,8 +1276,26 @@
             const currentCanvas = canvases.get(activeCanvasId);
             closeCanvasBtn.disabled = !(currentCanvas && currentCanvas.thumbnails.length === 0 && canvases.size > 1 && currentCanvas.name !== 'Renamed');
             
+            const toggleRenamedBtn = document.getElementById('toggle-renamed-canvas-btn');
+            const renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
+            if (renamedCanvas) {
+                toggleRenamedBtn.style.display = 'inline-block';
+            } else {
+                toggleRenamedBtn.style.display = 'none';
+            }
+
             populateCanvasDropdown();
-            layoutThumbnailsInGrid();
+            
+            const currentSettings = currentCanvas ? (currentCanvas.settings || { thumbnailSize: '1' }) : { thumbnailSize: '1' };
+            sizeSelector.value = currentSettings.thumbnailSize;
+
+            const currentSize = sizeSelector.value;
+            listViewButtonControls.style.display = currentSize === 'list' ? 'flex' : 'none';
+            if (currentSize === 'list') {
+                layoutThumbnailsInList();
+            } else {
+                layoutThumbnailsInGrid();
+            }
         }
 
         function populateCanvasDropdown() {
@@ -1011,6 +1322,32 @@
         let currentPlaylistIndex = -1;
         let currentVideoUrl = null;
 
+        function saveCanvasState() {
+            if (!directoryName) return;
+
+            const canvasData = {
+                canvases: Array.from(canvases.values()).map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    settings: c.settings || { thumbnailSize: '1' }, // Save settings per canvas
+                    thumbnails: c.thumbnails.map(t => {
+                        const nameDiv = t.querySelector('.thumbnail-name');
+                        return {
+                            fileName: t.dataset.fileName, // The current (potentially new) name
+                            originalFilename: nameDiv ? nameDiv.dataset.originalFilename : t.dataset.fileName,
+                            left: t.style.left,
+                            top: t.style.top,
+                            previousCanvasId: t.dataset.previousCanvasId
+                        };
+                    })
+                })),
+                activeCanvasId: activeCanvasId
+            };
+            const projectData = loadProjectData(directoryName);
+            projectData.canvases = canvasData;
+            saveProjectData(directoryName, projectData);
+        }
+
         function loadVideo(index) {
             if (currentVideoUrl) {
                 URL.revokeObjectURL(currentVideoUrl);
@@ -1018,12 +1355,14 @@
             
             currentPlaylistIndex = index;
             const thumbWrapper = playlist[index];
-            const fileName = thumbWrapper.dataset.fileName || thumbWrapper.querySelector('.thumbnail').dataset.fileName;
-            if (!fileName) {
-                console.error("Could not find a filename for the selected thumbnail.", thumbWrapper);
-                return; // or handle the error appropriately
+            const nameDiv = thumbWrapper.querySelector('.thumbnail-name');
+            const originalFilename = nameDiv ? nameDiv.dataset.originalFilename : thumbWrapper.dataset.fileName;
+
+            if (!originalFilename) {
+                console.error("Could not find an original filename for the selected thumbnail.", thumbWrapper);
+                return;
             }
-            const thumbName = fileName.substring(0, fileName.lastIndexOf('.'));
+            const thumbName = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
 
             // Find the video file by matching the base name, ignoring the extension
             const videoFile = allVideoFiles.find(f => f.name.substring(0, f.name.lastIndexOf('.')) === thumbName);
@@ -1032,6 +1371,10 @@
                 currentVideoUrl = URL.createObjectURL(videoFile);
                 videoPlayer.src = currentVideoUrl;
                 videoPlayer.play();
+            } else {
+                console.error(`Video file not found for thumbnail: ${thumbName}`);
+                console.log('Available video files:', allVideoFiles.map(f => f.name));
+                alert(`Could not find the video file for ${originalFilename}. Check the console for more details.`);
             }
 
             videoPrevBtn.style.display = index > 0 ? 'block' : 'none';
@@ -1041,24 +1384,35 @@
         function updatePlayButtonState() {
             const editModeBtn = document.getElementById('edit-mode-btn');
             const inEditMode = editModeBtn && editModeBtn.textContent.includes('On');
-            
+            const renameBtn = document.getElementById('rename-btn');
+            const deleteBtn = document.getElementById('delete-selected-btn');
+
             if (inEditMode) {
                 playBtn.disabled = playSelections.size === 0;
                 splitBtn.disabled = true;
                 sendToCanvasSelect.disabled = true;
                 hideBtn.disabled = true;
+                renameBtn.disabled = true; // Disable in edit mode
+                deleteBtn.disabled = true;
             } else {
-                const numSelected = selectedThumbnails.size;
-                playBtn.disabled = numSelected === 0;
-                splitBtn.disabled = numSelected === 0;
-                sendToCanvasSelect.disabled = numSelected === 0;
-                hideBtn.disabled = numSelected === 0;
+                const numThumbSelected = selectedThumbnails.size;
+                const numButtonSelected = buttonsForRemoval.size;
+
+                playBtn.disabled = numThumbSelected === 0 && numButtonSelected !== 1;
+                splitBtn.disabled = numThumbSelected === 0;
+                sendToCanvasSelect.disabled = numThumbSelected === 0;
+                hideBtn.disabled = numThumbSelected === 0;
+                deleteBtn.disabled = numThumbSelected === 0;
+
+                const currentCanvas = canvases.get(activeCanvasId);
+                const isRenamedCanvas = currentCanvas && currentCanvas.name === 'Renamed';
+                renameBtn.disabled = numThumbSelected === 0 || isRenamedCanvas;
             }
         }
 
         function updateContentSpacer() {
-            const thumbnails = document.querySelectorAll('.thumbnail');
-            if (thumbnails.length === 0) {
+            const wrappers = document.querySelectorAll('.thumbnail-wrapper');
+            if (wrappers.length === 0) {
                 contentSpacer.style.width = '0px';
                 contentSpacer.style.height = '0px';
                 return;
@@ -1067,9 +1421,9 @@
             let maxRight = 0;
             let maxBottom = 0;
 
-            thumbnails.forEach(thumb => {
-                const right = thumb.offsetLeft + thumb.offsetWidth;
-                const bottom = thumb.offsetTop + thumb.offsetHeight;
+            wrappers.forEach(wrapper => {
+                const right = wrapper.offsetLeft + wrapper.offsetWidth;
+                const bottom = wrapper.offsetTop + wrapper.offsetHeight;
                 if (right > maxRight) maxRight = right;
                 if (bottom > maxBottom) maxBottom = bottom;
             });
@@ -1080,21 +1434,46 @@
         }
 
         async function init() {
+            let directoryLoaded = false;
+            try {
+                const dirHandle = await getDb('lastDirectory');
+                if (dirHandle && typeof dirHandle.queryPermission === 'function') {
+                    // Only check for existing permission; don't request it on page load.
+                    if (await dirHandle.queryPermission({ mode: 'read' }) === 'granted') {
+                        await processDirectory(dirHandle);
+                        directoryLoaded = true;
+                    } else {
+                        console.log('Permission for last directory not granted. Waiting for user action.');
+                    }
+                }
+            } catch (e) {
+                console.error('Error during auto-load:', e);
+            } finally {
+                // If no directory was loaded (either due to no handle, no permission, or error),
+                // initialize a clean UI.
+                if (!directoryLoaded) {
+                    initializeUI();
+                }
+            }
+        }
+
+        function initializeUI() {
             const projectData = loadProjectData(directoryName);
-            const savedSize = projectData.thumbnailSize || '1';
-            sizeSelector.value = savedSize;
-            await loadRecentDirectories();
-            updateRemoveButtonState();
+            loadRecentDirectories();
+            updateSidebarActionButtonsState();
+
+            document.getElementById('copy-button-btn').addEventListener('click', () => {
+                if (buttonsForRemoval.size === 1) {
+                    const buttonId = buttonsForRemoval.values().next().value;
+                    openButtonEditor(buttonId);
+                }
+            });
 
             recentDirectoriesDropdown.addEventListener('click', (event) => {
                 event.stopPropagation();
                 const list = document.getElementById('recent-directories-list');
                 list.style.display = list.style.display === 'block' ? 'none' : 'block';
             });
-
-            if (!directoryName) {
-                directoryName = 'default'; // For testing purposes
-            }
 
             const numElementsInput = document.getElementById('num-elements-input');
             numElementsInput.addEventListener('change', () => {
@@ -1118,26 +1497,41 @@
                 saveProjectData(directoryName, projectData);
             });
 
-            const dirHandle = await getDb('lastDirectory');
-            if (dirHandle && typeof dirHandle.queryPermission === 'function') {
-                try {
-                    const hasPermission = await dirHandle.queryPermission({ mode: 'read' }) === 'granted' ||
-                                          await dirHandle.requestPermission({ mode: 'read' }) === 'granted';
-                    if (hasPermission) {
-                        await processDirectory(dirHandle);
-                    } else {
-                         console.error('Permission to access the last directory was denied.');
-                         await setDb('lastDirectory', null);
-                    }
-                } catch (err) {
-                    console.error('Could not auto-load directory:', err);
-                    await setDb('lastDirectory', null);
-                    await loadRecentDirectories(); 
-                }
-            } else if (dirHandle) {
-                console.warn('Last directory handle from IndexedDB was invalid. Clearing.');
-                await setDb('lastDirectory', null);
-            }
+            const verticalPaddingInput = document.getElementById('vertical-padding-input');
+            verticalPaddingInput.addEventListener('change', () => {
+                const projectData = loadProjectData(directoryName);
+                projectData.verticalPadding = verticalPaddingInput.value;
+                saveProjectData(directoryName, projectData);
+                isLayoutFrozen = false;
+                layoutThumbnailsInGrid();
+            });
+
+            const horizontalPaddingInput = document.getElementById('horizontal-padding-input');
+            horizontalPaddingInput.addEventListener('change', () => {
+                const projectData = loadProjectData(directoryName);
+                projectData.horizontalPadding = horizontalPaddingInput.value;
+                saveProjectData(directoryName, projectData);
+                isLayoutFrozen = false;
+                layoutThumbnailsInGrid();
+            });
+
+            const addWritingElementCheckbox = document.getElementById('add-writing-element-checkbox');
+            const writingElementNumberInput = document.getElementById('writing-element-number-input');
+
+            addWritingElementCheckbox.checked = projectData.addWritingElement;
+            writingElementNumberInput.value = projectData.writingElementNumber;
+
+            addWritingElementCheckbox.addEventListener('change', () => {
+                const projectData = loadProjectData(directoryName);
+                projectData.addWritingElement = addWritingElementCheckbox.checked;
+                saveProjectData(directoryName, projectData);
+            });
+
+            writingElementNumberInput.addEventListener('change', () => {
+                const projectData = loadProjectData(directoryName);
+                projectData.writingElementNumber = writingElementNumberInput.value;
+                saveProjectData(directoryName, projectData);
+            });
         }
 
         loadButton.addEventListener('click', async () => {
@@ -1271,21 +1665,231 @@
             }
         });
 
+        function findAndRenumberSequence(baseName, isRemoval = false) {
+            const regex = new RegExp(`^${escapeRegExp(baseName)} \\((\\d+)\\)`);
+            const matchingFiles = allVideoFiles.filter(f => regex.test(f.name));
+
+            matchingFiles.sort((a, b) => {
+                const aNum = parseInt(a.name.match(regex)[1], 10);
+                const bNum = parseInt(b.name.match(regex)[1], 10);
+                return aNum - bNum;
+            });
+
+            if (isRemoval) {
+                // Re-compact the sequence
+                matchingFiles.forEach((file, index) => {
+                    const expectedNum = index + 1;
+                    const currentNum = parseInt(file.name.match(regex)[1], 10);
+
+                    if (currentNum !== expectedNum) {
+                        const extension = file.name.substring(file.name.lastIndexOf('.'));
+                        const newFilename = `${baseName} (${expectedNum})${extension}`;
+                        
+                        // Find and update the UI
+                        const thumb = findThumbnailByOriginalFilename(file.name);
+                        if (thumb) {
+                            thumb.dataset.fileName = newFilename;
+                            thumb.querySelector('.thumbnail').dataset.fileName = newFilename;
+                            thumb.querySelector('.thumbnail-name').textContent = newFilename;
+                        }
+                        // Update the master file list
+                        file.name = newFilename;
+                    }
+                });
+                return -1; // Indicate renumbering happened
+            } else {
+                // Find the next available number
+                let nextNumber = 1;
+                for (const file of matchingFiles) {
+                    const currentNum = parseInt(file.name.match(regex)[1], 10);
+                    if (currentNum === nextNumber) {
+                        nextNumber++;
+                    } else {
+                        break; // Found a gap
+                    }
+                }
+                return nextNumber;
+            }
+        }
+        
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+        }
+
+        function findThumbnailByOriginalFilename(originalFilename) {
+             const thumbName = originalFilename.replace(/\.[^/.]+$/, ".jpg");
+             return Array.from(document.querySelectorAll('.thumbnail-wrapper')).find(w => {
+                const nameDiv = w.querySelector('.thumbnail-name');
+                return nameDiv && nameDiv.dataset.originalFilename === thumbName;
+            });
+        }
+
+
+        function renumberFiles(targetFolder, startingNumber) {
+            const filesInFolder = allVideoFiles.filter(file => file.customPath === targetFolder && /^\d+$/.test(file.name.substring(0, file.name.lastIndexOf('.'))));
+            
+            // Sort files numerically based on their current names
+            filesInFolder.sort((a, b) => {
+                const numA = parseInt(a.name.substring(0, a.name.lastIndexOf('.')), 10);
+                const numB = parseInt(b.name.substring(0, b.name.lastIndexOf('.')), 10);
+                return numA - numB;
+            });
+
+            let currentNumber = startingNumber;
+            filesInFolder.forEach(file => {
+                const originalName = file.name;
+                const num = parseInt(originalName.substring(0, originalName.lastIndexOf('.')), 10);
+
+                if (num >= startingNumber) {
+                    const extension = originalName.substring(originalName.lastIndexOf('.'));
+                    const newFilename = `${currentNumber}${extension}`;
+
+                    // Find the corresponding thumbnail and update it
+                    const thumb = Array.from(document.querySelectorAll('.thumbnail-wrapper')).find(t => t.dataset.fileName === originalName);
+                    if (thumb) {
+                        thumb.dataset.fileName = newFilename;
+                        thumb.querySelector('.thumbnail').dataset.fileName = newFilename;
+                        thumb.querySelector('.thumbnail-name').textContent = newFilename;
+                    }
+                    
+                    // Update the file object itself for consistency
+                    file.name = newFilename;
+
+                    currentNumber++;
+                }
+            });
+        }
         renameCanvasBtn.addEventListener('click', () => {
             const currentCanvas = canvases.get(activeCanvasId);
-            if (currentCanvas) {
-                if (currentCanvas.name === 'Renamed') {
-                    alert('The "Renamed" canvas cannot be renamed.');
-                    return;
-                }
-                const newName = prompt('Enter new name for the canvas:', currentCanvas.name);
-                if (newName && newName.trim() !== '') {
-                    currentCanvas.name = newName.trim();
-                    document.title = newName.trim();
-                    populateCanvasDropdown();
-                }
+            if (!currentCanvas) return;
+
+            const newName = prompt('Enter new name for the canvas:', currentCanvas.name);
+            if (newName && newName.trim() !== '') {
+                currentCanvas.name = newName.trim();
+                saveCanvasState();
+                populateCanvasDropdown();
+                renderCanvas(activeCanvasId);
             }
-            document.getElementById('cog-dropdown').style.display = 'none';
+        });
+
+        document.getElementById('manual-rename-btn').addEventListener('click', () => {
+            if (sizeSelector.value !== 'list') {
+                alert('Manual rename is only available in list view.');
+                return;
+            }
+            if (selectedThumbnails.size !== 1) {
+                alert('Please select exactly one file to rename.');
+                return;
+            }
+
+            const thumbnailWrapper = selectedThumbnails.values().next().value;
+            const currentFilename = thumbnailWrapper.dataset.fileName;
+            const newFilename = prompt('Enter new filename:', currentFilename);
+
+            if (newFilename && newFilename.trim() !== '') {
+                const trimmedNewFilename = newFilename.trim();
+                thumbnailWrapper.dataset.fileName = trimmedNewFilename;
+                thumbnailWrapper.querySelector('.thumbnail-name').textContent = trimmedNewFilename;
+                thumbnailWrapper.querySelector('.new-filename-placeholder').textContent = trimmedNewFilename;
+                saveCanvasState();
+                layoutThumbnailsInList(); // Re-apply list view logic
+            }
+        });
+
+        renameBtn.addEventListener('click', () => {
+            const lastClickedButtonData = JSON.parse(renameBtn.dataset.lastClicked || 'null');
+            if (!lastClickedButtonData) {
+                alert('Please select a naming button from the sidebar first.');
+                return;
+            }
+             if (selectedThumbnails.size === 0) {
+                alert('Please select one or more thumbnails to rename.');
+                return;
+            }
+
+            const renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
+            if (!renamedCanvas) {
+                console.error("Renamed canvas not found!");
+                return;
+            }
+
+            const selectedArray = Array.from(selectedThumbnails);
+            const username = projectUsernameInput.value.trim() || 'username';
+
+            // Trigger renumbering for the original filenames first
+            const originalBaseNames = new Set();
+            selectedArray.forEach(thumb => {
+                const originalThumbName = thumb.querySelector('.thumbnail-name').dataset.originalFilename;
+                const originalVideoName = originalThumbName.replace(/\.[^/.]+$/, '.mp4');
+                const videoFile = allVideoFiles.find(f => f.name === originalVideoName);
+                if (videoFile) {
+                    originalBaseNames.add(getBaseName(videoFile.name));
+                }
+            });
+            originalBaseNames.forEach(baseName => findAndRenumberSequence(baseName, true));
+
+
+            const category = lastClickedButtonData.path[0];
+            const prefix = `[${username}]_${category}`;
+            const buttonText = lastClickedButtonData.fullButtonText;
+            const startingNumbers = new Map();
+
+            selectedArray.forEach((thumb) => {
+                const originalThumbName = thumb.querySelector('.thumbnail-name').dataset.originalFilename;
+                const originalVideoName = originalThumbName.replace(/\.[^/.]+$/, '.mp4');
+                const videoFile = allVideoFiles.find(f => f.name === originalVideoName);
+
+                let suffix = '';
+                let writingElement = '';
+
+                const addWritingElement = document.getElementById('add-writing-element-checkbox').checked;
+                if (addWritingElement) {
+                    const writingNumber = document.getElementById('writing-element-number-input').value;
+                    writingElement = ` (Writing ${writingNumber})`;
+                }
+
+                if (videoFile && videoFile.customPath === 'Landscape') {
+                    suffix = ' (Landscape)';
+                } else if (videoFile && videoFile.customPath === 'Landscape Rotate') {
+                    suffix = ' (Landscape) (Rotate)';
+                }
+
+                let baseName;
+                if (lastClickedButtonData.specialType === 'plusOne') {
+                    baseName = `${prefix}${writingElement}${suffix}`;
+                } else {
+                    baseName = `${prefix} ${buttonText}${writingElement}${suffix}`;
+                }
+
+                if (!startingNumbers.has(baseName)) {
+                    startingNumbers.set(baseName, findAndRenumberSequence(baseName, false));
+                }
+                
+                const nextNumber = startingNumbers.get(baseName);
+                const extension = originalThumbName.substring(originalThumbName.lastIndexOf('.'));
+                const newFilename = `${baseName} (${nextNumber})${extension.replace(/\.mp4$/i, '.jpg')}`;
+
+                // Update the master file list first
+                if(videoFile) {
+                    videoFile.name = newFilename.replace(/\.jpg$/i, '.mp4');
+                }
+
+                // Update UI and data attributes
+                thumb.dataset.fileName = newFilename;
+                thumb.querySelector('.thumbnail').dataset.fileName = newFilename;
+                thumb.querySelector('.thumbnail-name').textContent = newFilename;
+                thumb.querySelector('.new-filename-placeholder').textContent = newFilename;
+
+                startingNumbers.set(baseName, nextNumber + 1);
+            });
+
+            sendThumbnailsToCanvas(renamedCanvas.id, true); // True clears selection
+            renderCanvas(activeCanvasId);
+            saveCanvasState();
+
+            updateSidebarActionButtonsState();
+            updateBottomBarInfo(); // Re-show sidebar button info
+            updatePreviewPanel(lastClickedButtonData); // Refresh the preview panel
         });
 
         removeAllButtonsBtn.addEventListener('click', () => {
@@ -1432,6 +2036,7 @@
             selectedThumbnails.forEach(thumb => thumb.classList.remove('selected'));
             selectedThumbnails.clear();
             updatePlayButtonState();
+            updateBottomBarInfo();
         });
 
         hideBtn.addEventListener('click', () => {
@@ -1439,7 +2044,7 @@
                 let hiddenCanvas = Array.from(canvases.values()).find(c => c.name === 'Hidden');
                 if (!hiddenCanvas) {
                     const newCanvasId = getNextCanvasId();
-                    hiddenCanvas = { id: newCanvasId, name: 'Hidden', thumbnails: [] };
+                    hiddenCanvas = { id: newCanvasId, name: 'Hidden', thumbnails: [], settings: { thumbnailSize: '1' } };
                     canvases.set(newCanvasId, hiddenCanvas);
                 }
 
@@ -1471,6 +2076,7 @@
                 });
 
                 selectedThumbnails.clear();
+                saveCanvasState();
                 renderCanvas(activeCanvasId);
                 updatePlayButtonState();
             }
@@ -1479,7 +2085,7 @@
         deleteLayoutBtn.addEventListener('click', deleteLayout);
         splitBtn.addEventListener('click', () => {
             const newCanvasId = getNextCanvasId();
-            const newCanvas = { id: newCanvasId, name: `Canvas ${newCanvasId}`, thumbnails: [] };
+            const newCanvas = { id: newCanvasId, name: `Canvas ${newCanvasId}`, thumbnails: [], settings: { thumbnailSize: '1' } };
             canvases.set(newCanvasId, newCanvas);
 
             const currentCanvas = canvases.get(activeCanvasId);
@@ -1491,13 +2097,50 @@
 
             selectedThumbnails.clear();
             updatePlayButtonState();
+            saveCanvasState();
             
             populateCanvasDropdown();
             canvasSelect.value = newCanvasId;
             renderCanvas(newCanvasId);
         });
         canvasSelect.addEventListener('change', (e) => {
-            renderCanvas(parseInt(e.target.value));
+            const newCanvasId = parseInt(e.target.value);
+            const renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
+
+            if (newCanvasId !== activeCanvasId) {
+                if (renamedCanvas && newCanvasId === renamedCanvas.id) {
+                    lastCanvasIdBeforeRenamed = activeCanvasId;
+                } else {
+                    lastCanvasIdBeforeRenamed = null; 
+                }
+                lastActiveCanvasId = activeCanvasId;
+                document.getElementById('toggle-last-canvas-btn').style.display = 'inline-block';
+            }
+            renderCanvas(newCanvasId);
+        });
+        
+        document.getElementById('toggle-renamed-canvas-btn').addEventListener('click', () => {
+            const renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
+            if (!renamedCanvas) return;
+
+            if (activeCanvasId === renamedCanvas.id) {
+                // If we are on Renamed, go back to the last one
+                if (lastCanvasIdBeforeRenamed && canvases.has(lastCanvasIdBeforeRenamed)) {
+                    renderCanvas(lastCanvasIdBeforeRenamed);
+                }
+            } else {
+                // If we are not on Renamed, go to it
+                lastCanvasIdBeforeRenamed = activeCanvasId;
+                renderCanvas(renamedCanvas.id);
+            }
+        });
+
+        document.getElementById('toggle-last-canvas-btn').addEventListener('click', () => {
+            if (lastActiveCanvasId) {
+                const currentId = activeCanvasId;
+                renderCanvas(lastActiveCanvasId);
+                lastActiveCanvasId = currentId;
+            }
         });
 
         sendToCanvasSelect.addEventListener('change', (e) => {
@@ -1512,6 +2155,7 @@
             if (currentCanvas && currentCanvas.thumbnails.length === 0 && canvases.size > 1) {
                 canvases.delete(activeCanvasId);
                 const newActiveCanvasId = canvases.keys().next().value;
+                saveCanvasState();
                 populateCanvasDropdown();
                 canvasSelect.value = newActiveCanvasId;
                 renderCanvas(newActiveCanvasId);
@@ -1535,6 +2179,7 @@
             if (clearSelection) {
                 selectedThumbnails.clear();
             }
+            saveCanvasState();
             renderCanvas(activeCanvasId); // Re-render the current canvas to show the items have moved
             updatePlayButtonState();
         }
@@ -1548,19 +2193,65 @@
                 playlist = Array.from(playSelections).map(videoName => {
                     const videoFile = allVideoFiles.find(f => f.name.startsWith(videoName));
                     if (videoFile) {
-                        // Create a mock wrapper that loadVideo can use
                         return { dataset: { fileName: videoFile.name.replace(/\.[^/.]+$/, ".jpg") } };
                     }
                     return null;
                 }).filter(Boolean);
-            } else {
+            } else if (selectedThumbnails.size > 0) {
                 playlist = Array.from(selectedThumbnails);
+            } else if (buttonsForRemoval.size === 1) {
+                const buttonId = buttonsForRemoval.values().next().value;
+                const buttonElement = document.querySelector(`button[data-id='${buttonId}']`);
+                if (buttonElement) {
+                    const lastClickedData = JSON.parse(renameBtn.dataset.lastClicked || 'null');
+                    if (lastClickedData) {
+                        const { path, fullButtonText, specialType } = lastClickedData;
+                        const isCategoryOnly = specialType === 'plusOne';
+
+                        const username = projectUsernameInput.value.trim();
+                        const category = path[0];
+                        const prefix = `[${username}]_${category}`;
+
+                        const currentCanvas = canvases.get(activeCanvasId);
+                        if (currentCanvas) {
+                            playlist = currentCanvas.thumbnails.filter(thumb => {
+                                const baseFilename = thumb.dataset.fileName.substring(0, thumb.dataset.fileName.lastIndexOf('.'));
+                                const filenameWithoutNumber = baseFilename.replace(/\s*\(\d+\)$/, '').trim();
+                                
+                                if (isCategoryOnly) {
+                                    return filenameWithoutNumber === prefix;
+                                } else {
+                                    const expectedFilenamePart = `${prefix} ${fullButtonText}`;
+                                    return filenameWithoutNumber.startsWith(expectedFilenamePart);
+                                }
+                            });
+                        }
+                    }
+                }
+            } else {
+                 playlist = [];
             }
+
 
             if (playlist.length > 0) {
                 videoOverlay.style.display = 'flex';
                 loadVideo(0);
             }
+        });
+
+        document.getElementById('delete-selected-btn').addEventListener('click', () => {
+            let deletedCanvas = Array.from(canvases.values()).find(c => c.name === 'Deleted');
+            if (!deletedCanvas) {
+                const newCanvasId = getNextCanvasId();
+                deletedCanvas = { id: newCanvasId, name: 'Deleted', thumbnails: [], settings: { thumbnailSize: '1' } };
+                canvases.set(newCanvasId, deletedCanvas);
+            }
+
+            selectedThumbnails.forEach(thumb => {
+                thumb.dataset.previousCanvasId = activeCanvasId;
+            });
+            
+            sendThumbnailsToCanvas(deletedCanvas.id);
         });
         videoCloseBtn.addEventListener('click', () => {
             videoOverlay.style.display = 'none';
@@ -1583,15 +2274,22 @@
 
         thumbnailContainer.addEventListener('mousedown', startSelection);
 
-        closeModal.addEventListener('click', () => scriptModal.style.display = 'none');
+        scriptModal.querySelector('.close').addEventListener('click', () => scriptModal.style.display = 'none');
         copyScriptBtn.addEventListener('click', copyScriptToClipboard);
         downloadScriptLink.addEventListener('click', downloadBatchFile);
         sizeSelector.addEventListener('change', (event) => {
             const newSize = event.target.value;
-            const projectData = loadProjectData(directoryName);
-            projectData.thumbnailSize = newSize;
-            saveProjectData(directoryName, projectData);
+            const currentCanvas = canvases.get(activeCanvasId);
+            if (currentCanvas) {
+                if (!currentCanvas.settings) {
+                    currentCanvas.settings = {};
+                }
+                currentCanvas.settings.thumbnailSize = newSize;
+                saveCanvasState();
+            }
+
             const editModeBtn = document.getElementById('edit-mode-btn');
+            listViewButtonControls.style.display = newSize === 'list' ? 'flex' : 'none';
             if (editModeBtn && editModeBtn.textContent.includes('On')) {
                 layoutLandscapeThumbnails();
             } else {
@@ -1603,21 +2301,101 @@
             }
         });
 
+        showThumbnailsBtn.addEventListener('click', () => {
+            showThumbnailsBtn.classList.toggle('active');
+            if (directoryName) {
+                const projectData = loadProjectData(directoryName);
+                projectData.listViewShowThumbnails = showThumbnailsBtn.classList.contains('active');
+                saveProjectData(directoryName, projectData);
+            }
+            layoutThumbnailsInList();
+        });
+        showCanvasNameBtn.addEventListener('click', () => {
+            showCanvasNameBtn.classList.toggle('active');
+            if (directoryName) {
+                const projectData = loadProjectData(directoryName);
+                projectData.listViewShowCanvasName = showCanvasNameBtn.classList.contains('active');
+                saveProjectData(directoryName, projectData);
+            }
+            layoutThumbnailsInList();
+        });
+        showNewFilenameBtn.addEventListener('click', () => {
+            showNewFilenameBtn.classList.toggle('active');
+            if (directoryName) {
+                const projectData = loadProjectData(directoryName);
+                projectData.listViewShowNewFilename = showNewFilenameBtn.classList.contains('active');
+                saveProjectData(directoryName, projectData);
+            }
+            layoutThumbnailsInList();
+        });
+
+
         function layoutThumbnailsInList() {
+            thumbnailContainer.classList.add('list-view-active');
             isLayoutFrozen = false;
-            thumbnailContainer.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
+            const showThumbnails = showThumbnailsBtn.classList.contains('active');
+            const showCanvasName = showCanvasNameBtn.classList.contains('active');
+            const showNewFilename = showNewFilenameBtn.classList.contains('active');
+
+            const wrappers = Array.from(thumbnailContainer.querySelectorAll('.thumbnail-wrapper'));
+            
+            // Sort wrappers based on the current filename (new or original)
+            // This ensures the list is always alphabetically sorted.
+            wrappers.sort((a, b) => {
+                const nameA = a.dataset.fileName.toLowerCase();
+                const nameB = b.dataset.fileName.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+            wrappers.forEach(wrapper => thumbnailContainer.appendChild(wrapper));
+
+            wrappers.forEach(wrapper => {
                 wrapper.style.position = 'relative';
                 wrapper.style.left = '0px';
                 wrapper.style.top = '0px';
                 wrapper.classList.add('list-view');
+
+                const thumb = wrapper.querySelector('.thumbnail');
+                const nameDiv = wrapper.querySelector('.thumbnail-name');
+                const canvasNamePlaceholder = wrapper.querySelector('.canvas-name-placeholder');
+                const newFilenamePlaceholder = wrapper.querySelector('.new-filename-placeholder');
+                
+                const originalFilename = nameDiv.dataset.originalFilename;
+                const newFilename = wrapper.dataset.fileName;
+
+                if (showNewFilename) {
+                    nameDiv.textContent = originalFilename;
+                    newFilenamePlaceholder.textContent = newFilename;
+                } else {
+                    nameDiv.textContent = originalFilename;
+                    newFilenamePlaceholder.textContent = '...'; // Or some other placeholder
+                }
+
+                if (thumb) thumb.style.display = showThumbnails ? 'block' : 'none';
+                if (canvasNamePlaceholder) canvasNamePlaceholder.style.display = showCanvasName ? 'block' : 'none';
+                if (newFilenamePlaceholder) newFilenamePlaceholder.style.display = showNewFilename ? 'block' : 'none';
             });
             updateContentSpacer();
         }
 
         function layoutThumbnailsInGrid() {
+            thumbnailContainer.classList.remove('list-view-active');
             thumbnailContainer.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
                 wrapper.classList.remove('list-view');
+
+                // Reset inline display styles that may have been set by list view
+                const thumb = wrapper.querySelector('.thumbnail');
+                if (thumb) thumb.style.display = '';
+
+                const nameDiv = wrapper.querySelector('.thumbnail-name');
+                if (nameDiv) nameDiv.style.display = 'none';
+
+                const canvasNamePlaceholder = wrapper.querySelector('.canvas-name-placeholder');
+                if (canvasNamePlaceholder) canvasNamePlaceholder.style.display = '';
+
+                const newFilenamePlaceholder = wrapper.querySelector('.new-filename-placeholder');
+                if (newFilenamePlaceholder) newFilenamePlaceholder.style.display = '';
             });
+
             if (isLayoutFrozen) {
                 const scale = parseFloat(sizeSelector.value);
                 thumbnailContainer.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
@@ -1635,10 +2413,13 @@
                 return;
             }
 
+            const projectData = loadProjectData(directoryName);
+            const verticalPadding = Number(projectData.verticalPadding) || 0;
+            const horizontalPadding = Number(projectData.horizontalPadding) || 0;
             const scale = parseFloat(sizeSelector.value);
             const containerWidth = thumbnailContainer.clientWidth;
-            let xOffset = 20;
-            let yOffset = 20;
+            let xOffset = horizontalPadding;
+            let yOffset = verticalPadding;
             let maxRowHeight = 0;
 
             const wrappers = thumbnailContainer.querySelectorAll('.thumbnail-wrapper');
@@ -1663,11 +2444,11 @@
                 // Restore the original display property
                 nameDiv.style.display = originalDisplay;
 
-                const wrapperHeight = scaledHeight + nameHeight + 4;
+                const wrapperHeight = wrapper.offsetHeight;
 
-                if (xOffset + scaledWidth + 20 > containerWidth && xOffset > 20) {
-                    xOffset = 20;
-                    yOffset += maxRowHeight + 20;
+                if (xOffset + scaledWidth + horizontalPadding > containerWidth && xOffset > horizontalPadding) {
+                    xOffset = horizontalPadding;
+                    yOffset += maxRowHeight + verticalPadding;
                     maxRowHeight = 0;
                 }
                 
@@ -1681,7 +2462,7 @@
                     maxRowHeight = wrapperHeight;
                 }
                 
-                xOffset += scaledWidth + 20;
+                xOffset += scaledWidth + horizontalPadding;
             });
 
             updateContentSpacer();
@@ -1714,11 +2495,31 @@
 
             directoryName = dirHandle.name;
             document.title = directoryName; // Update page title
+            
+            initializeUI(); // Initialize UI with the correct directoryName
+
             const projectData = loadProjectData(directoryName);
 
-            projectUsernameInput.value = projectData.projectUsername || '';
-            document.getElementById('num-elements-input').value = projectData.numElements || 1;
-            document.getElementById('font-size-slider').value = projectData.fontSize || 14;
+            projectUsernameInput.value = projectData.projectUsername;
+            document.getElementById('num-elements-input').value = projectData.numElements;
+            document.getElementById('font-size-slider').value = projectData.fontSize;
+            document.getElementById('vertical-padding-input').value = projectData.verticalPadding;
+            document.getElementById('horizontal-padding-input').value = projectData.horizontalPadding;
+
+            // --- Restore Preview Sidebar State ---
+            const previewSizeSelector = document.getElementById('preview-size-selector');
+            if (projectData.previewSidebarVisible) {
+                rightSidebar.style.display = 'flex';
+                rightSidebar.style.width = `${projectData.previewSidebarWidth}px`;
+            } else {
+                rightSidebar.style.display = 'none';
+            }
+            previewSizeSelector.value = projectData.previewThumbnailSize || '0.5';
+
+            // --- Restore List View Toggle State ---
+            showThumbnailsBtn.classList.toggle('active', projectData.listViewShowThumbnails);
+            showCanvasNameBtn.classList.toggle('active', projectData.listViewShowCanvasName);
+            showNewFilenameBtn.classList.toggle('active', projectData.listViewShowNewFilename);
 
             loadCustomButtons(projectData.customButtonTree, projectData.collapseState, projectData.buttonVisibility);
 
@@ -1824,6 +2625,7 @@
             allVideoFiles = [];
             let thumbnailFiles = [];
             let hasThumbnailsSubdir = false;
+            const thumbnailsToUpdate = new Set();
 
             async function recursivelyFindThumbnails(dirHandle, pathPrefix = '') {
                 const thumbnailsDirHandle = await dirHandle.getDirectoryHandle('Thumbnails');
@@ -1853,27 +2655,90 @@
                 // scan directory doesn't exist, which is fine.
             }
 
-            for await (const entry of dirHandle.values()) {
-                if (entry.kind === 'file' && entry.name.match(/\.(mp4|avi|mov|mkv)$/i)) {
-                    allVideoFiles.push(await entry.getFile());
+            async function recursivelyFindVideos(dirHandle, pathPrefix = '') {
+                for await (const entry of dirHandle.values()) {
+                    if (entry.kind === 'file' && entry.name.match(/\.(mp4|avi|mov|mkv)$/i)) {
+                        const file = await entry.getFile();
+                        const metadata = await getFileMetadata(directoryName, file.name);
+                        if (!metadata || file.lastModified > metadata.lastModified) {
+                            thumbnailsToUpdate.add(file.name.replace(/\.[^/.]+$/, ''));
+                        }
+                        file.customPath = pathPrefix; // Store the subdirectory
+                        allVideoFiles.push(file);
+                    }
                 }
             }
 
+            // Find videos in the root and other key directories
+            await recursivelyFindVideos(dirHandle, '');
+            for (const subDir of ['Landscape', 'Landscape Rotate', 'Edit']) {
+                try {
+                    const subDirHandle = await dirHandle.getDirectoryHandle(subDir);
+                    await recursivelyFindVideos(subDirHandle, subDir);
+                } catch (e) {
+                    // Subdirectory doesn't exist, which is fine.
+                }
+            }
+
+            // Find thumbnails in the root and other key directories
             try {
-                // Find thumbnails in the root and other key directories
                 await recursivelyFindThumbnails(dirHandle);
                 hasThumbnailsSubdir = true;
-
-                for (const subDir of ['Landscape', 'Landscape Rotate', 'Edit']) {
-                    try {
-                        const subDirHandle = await dirHandle.getDirectoryHandle(subDir);
-                        await recursivelyFindThumbnails(subDirHandle, subDir);
-                    } catch (e) {
-                        // Subdirectory doesn't exist, which is fine.
-                    }
-                }
             } catch (e) {
-                hasThumbnailsSubdir = false;
+                // Root 'Thumbnails' dir may not exist if all files were moved.
+            }
+
+            for (const subDir of ['Landscape', 'Landscape Rotate', 'Edit']) {
+                try {
+                    const subDirHandle = await dirHandle.getDirectoryHandle(subDir);
+                    await recursivelyFindThumbnails(subDirHandle, subDir);
+                    hasThumbnailsSubdir = true; // Found thumbnails in a subdir.
+                } catch (e) {
+                    // Subdirectory or its Thumbnails folder doesn't exist, which is fine.
+                }
+            }
+
+            // --- Thumbnail Management Prompts ---
+            const videosToUpdate = allVideoFiles.filter(f => thumbnailsToUpdate.has(f.name.replace(/\.[^/.]+$/, '')));
+            if (videosToUpdate.length > 0) {
+                if (confirm(`${videosToUpdate.length} file(s) have been modified. Would you like to generate a script to update their thumbnails?`)) {
+                    generateBatchScript(videosToUpdate, directoryName);
+                    scriptModal.style.display = 'block';
+                }
+            }
+            const videoBasenames = new Set(allVideoFiles.map(f => f.name.substring(0, f.name.lastIndexOf('.'))));
+            const thumbnailBasenames = new Set(thumbnailFiles.map(f => f.name.substring(0, f.name.lastIndexOf('.'))));
+
+            const videosMissingThumbnails = allVideoFiles.filter(f => !thumbnailBasenames.has(f.name.substring(0, f.name.lastIndexOf('.'))));
+            let orphanedThumbnails = thumbnailFiles.filter(f => !videoBasenames.has(f.name.substring(0, f.name.lastIndexOf('.'))));
+
+            // Filter out thumbnails that are already permanently hidden
+            const permanentlyHidden = new Set(projectData.hiddenOrphans || []);
+            const newlyOrphaned = orphanedThumbnails.filter(f => !permanentlyHidden.has(f.name));
+
+            if (newlyOrphaned.length > 0) {
+                const userChoice = await promptOrphanedThumbnails(newlyOrphaned);
+                const orphanNamesToHide = new Set(newlyOrphaned.map(f => f.name));
+                
+                if (userChoice === 'hide') {
+                    thumbnailFiles = thumbnailFiles.filter(f => !orphanNamesToHide.has(f.name));
+                } else if (userChoice === 'delete') {
+                    generateOrphanDeletionScript(newlyOrphaned);
+                } else if (userChoice === 'hideForever') {
+                    projectData.hiddenOrphans = [...permanentlyHidden, ...orphanNamesToHide];
+                    saveProjectData(directoryName, projectData);
+                    thumbnailFiles = thumbnailFiles.filter(f => !orphanNamesToHide.has(f.name));
+                }
+            }
+            
+            // Always filter out the permanently hidden ones from the main list
+            thumbnailFiles = thumbnailFiles.filter(f => !permanentlyHidden.has(f.name));
+            
+            if (videosMissingThumbnails.length > 0) {
+                if (confirm(`${videosMissingThumbnails.length} video(s) are missing thumbnails. Would you like to generate a script to create them?`)) {
+                    generateBatchScript(videosMissingThumbnails, directoryName);
+                    scriptModal.style.display = 'block';
+                }
             }
             
             if (hasThumbnailsSubdir) {
@@ -1898,159 +2763,172 @@
                     });
                 });
 
-                Promise.all(imageLoadPromises).then(async loadedImages => {
-                    allThumbnails = loadedImages;
+                const loadedImages = await Promise.all(imageLoadPromises);
+                
+                allVideoFiles.forEach(async (file) => {
+                    await setFileMetadata(directoryName, file.name, { lastModified: file.lastModified });
+                });
+
+                const wrapperMap = new Map();
+                loadedImages.forEach(img => {
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('thumbnail-wrapper');
+                    wrapper.dataset.fileName = img.dataset.fileName;
+                    wrapper.appendChild(img);
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.classList.add('thumbnail-name');
+                    nameDiv.textContent = img.dataset.fileName;
+                    nameDiv.dataset.originalFilename = img.dataset.fileName;
+                    wrapper.appendChild(nameDiv);
+
+                    const newFilenameDiv = document.createElement('div');
+                    newFilenameDiv.classList.add('new-filename-placeholder');
+                    newFilenameDiv.textContent = '...'; // Placeholder text
+                    wrapper.appendChild(newFilenameDiv);
+
+                    const canvasNameDiv = document.createElement('div');
+                    canvasNameDiv.classList.add('canvas-name-placeholder');
+                    wrapper.appendChild(canvasNameDiv);
+
+
+                    wrapperMap.set(img.dataset.fileName, wrapper);
+
+                    makeDraggable(wrapper);
                     
-                    try {
-                        if (!savedCanvasData || !Array.isArray(savedCanvasData.canvases)) throw new Error("No valid saved data");
+                    nameDiv.addEventListener('dblclick', () => {
+                        nameDiv.contentEditable = true;
+                        nameDiv.focus();
+                    });
 
-                        canvases = new Map(savedCanvasData.canvases.map(c => [c.id, { ...c, thumbnails: [] }]));
-                        activeCanvasId = savedCanvasData.activeCanvasId;
+                    nameDiv.addEventListener('blur', () => {
+                        nameDiv.contentEditable = false;
+                        const newName = nameDiv.textContent;
+                        img.dataset.fileName = newName;
+                        wrapper.dataset.fileName = newName;
+                        saveCanvasState();
+                    });
+                });
 
-                        const thumbMap = new Map(allThumbnails.map(t => [t.dataset.fileName, t]));
+                try {
+                    if (!savedCanvasData || !Array.isArray(savedCanvasData.canvases)) throw new Error("No valid saved data");
 
-                        savedCanvasData.canvases.forEach(savedCanvas => {
-                            const canvas = canvases.get(savedCanvas.id);
-                             if (!canvas) return; // Skip if a canvas from save data doesn't exist
-                            savedCanvas.thumbnails.forEach(savedThumb => {
-                                const thumb = thumbMap.get(savedThumb.fileName);
-                                if (thumb) {
-                                    canvas.thumbnails.push(thumb);
-                                    thumb.style.position = 'absolute';
-                                    thumb.style.left = savedThumb.left;
-                                    thumb.style.top = savedThumb.top;
-                                     if (savedThumb.previousCanvasId) {
-                                        thumb.dataset.previousCanvasId = savedThumb.previousCanvasId;
-                                     }
-                                    isLayoutFrozen = true;
+                    canvases = new Map(savedCanvasData.canvases.map(c => [c.id, { ...c, thumbnails: [] }]));
+                    activeCanvasId = savedCanvasData.activeCanvasId;
+                    const placedThumbnails = new Set();
+
+                    savedCanvasData.canvases.forEach(savedCanvas => {
+                        const canvas = canvases.get(savedCanvas.id);
+                        if (!canvas) return;
+                        savedCanvas.thumbnails.forEach(savedThumb => {
+                            const wrapper = wrapperMap.get(savedThumb.originalFilename);
+                            if (wrapper) {
+                                // Restore both original and current names
+                                wrapper.dataset.fileName = savedThumb.fileName;
+                                const img = wrapper.querySelector('.thumbnail');
+                                if (img) img.dataset.fileName = savedThumb.fileName;
+                                const nameDiv = wrapper.querySelector('.thumbnail-name');
+                                if (nameDiv) {
+                                    nameDiv.textContent = savedThumb.fileName;
+                                    nameDiv.dataset.originalFilename = savedThumb.originalFilename;
                                 }
-                            });
-                        });
-                         // Verify that the active canvas actually exists, otherwise reset it.
-                        if (!canvases.has(activeCanvasId)) {
-                            activeCanvasId = canvases.keys().next().value || 1;
-                        }
-
-                    } catch (err) {
-                        console.warn("Could not restore canvas from saved data. Deleting invalid data and loading fresh.", err);
-                        projectData.canvases = null; // Clear bad data
-                        saveProjectData(directoryName, projectData);
-                        canvases.clear();
-                        canvases.set(1, { id: 1, name: 'Canvas 1', thumbnails: [...allThumbnails] });
-                        activeCanvasId = 1;
-                        isLayoutFrozen = false;
-                    }
-
-                    let renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
-                    if (!renamedCanvas) {
-                        const renamedCanvasId = getNextCanvasId();
-                        canvases.set(renamedCanvasId, { id: renamedCanvasId, name: 'Renamed', thumbnails: [] });
-                    }
-
-                    // --- Auto-organize processed thumbnails ---
-                    if (projectData.preEditModeCanvasMap && (hasLandscapeVideos || hasLandscapeRotateVideos || hasEditVideos)) {
-                        const organizeProcessedThumbnails = async () => {
-                            const preEditMap = new Map(Object.entries(projectData.preEditModeCanvasMap));
-                            const processedDirs = [];
-                            if (hasLandscapeVideos) processedDirs.push('Landscape');
-                            if (hasLandscapeRotateVideos) processedDirs.push('Landscape Rotate');
-                            if (hasEditVideos) processedDirs.push('Edit');
-
-                            const allProcessedFiles = new Set();
-
-                            for (const dirName of processedDirs) {
-                                try {
-                                    const dirHandle = await currentDirHandle.getDirectoryHandle(dirName);
-                                    for await (const entry of dirHandle.values()) {
-                                        if (entry.kind === 'file') {
-                                            allProcessedFiles.add(entry.name.substring(0, entry.name.lastIndexOf('.')));
-                                        }
-                                    }
-                                } catch (e) {
-                                    console.warn(`Could not read processed directory ${dirName}:`, e);
+                                 const newFilenamePlaceholder = wrapper.querySelector('.new-filename-placeholder');
+                                if (newFilenamePlaceholder && savedThumb.fileName !== savedThumb.originalFilename) {
+                                    newFilenamePlaceholder.textContent = savedThumb.fileName;
                                 }
-                            }
 
-                            // Create a temporary holding array for thumbnails to be moved
-                            const thumbnailsToMove = [];
-                            
-                            // Go through all canvases and pull out any thumbnails that were processed
-                            for (const sourceCanvas of canvases.values()) {
-                                sourceCanvas.thumbnails = sourceCanvas.thumbnails.filter(thumb => {
-                                    const baseName = thumb.dataset.fileName.substring(0, thumb.dataset.fileName.lastIndexOf('.'));
-                                    if (allProcessedFiles.has(baseName)) {
-                                        thumbnailsToMove.push(thumb);
-                                        return false; // Remove from current canvas
-                                    }
-                                    return true; // Keep in current canvas
-                                });
-                            }
 
-                            // Now, distribute the collected thumbnails back to their original canvases
-                            thumbnailsToMove.forEach(thumb => {
-                                const originalCanvasId = preEditMap.get(thumb.dataset.fileName);
-                                const targetCanvas = canvases.get(originalCanvasId);
-                                if (targetCanvas) {
-                                     if (!targetCanvas.thumbnails.some(t => t.dataset.fileName === thumb.dataset.fileName)) {
-                                        targetCanvas.thumbnails.push(thumb);
-                                     }
-                                } else {
-                                    // Fallback: if the original canvas is gone, put it in the first canvas
-                                    canvases.get(1)?.thumbnails.push(thumb);
+                                canvas.thumbnails.push(wrapper);
+                                wrapper.style.position = 'absolute';
+                                wrapper.style.left = savedThumb.left;
+                                wrapper.style.top = savedThumb.top;
+                                if (savedThumb.previousCanvasId) {
+                                    wrapper.dataset.previousCanvasId = savedThumb.previousCanvasId;
                                 }
-                            });
-
-                            // Clean up the map from localStorage after using it
-                            delete projectData.preEditModeCanvasMap;
-                            saveProjectData(directoryName, projectData);
-                        };
-
-                        await organizeProcessedThumbnails();
-                    }
-
-                    allThumbnails.forEach(img => {
-                        // Create a wrapper for the image and its name
-                        const wrapper = document.createElement('div');
-                        wrapper.classList.add('thumbnail-wrapper');
-                        wrapper.dataset.fileName = img.dataset.fileName;
-                        wrapper.appendChild(img);
-
-                        const nameDiv = document.createElement('div');
-                        nameDiv.classList.add('thumbnail-name');
-                        nameDiv.textContent = img.dataset.fileName;
-                        nameDiv.dataset.originalFilename = img.dataset.fileName;
-                        wrapper.appendChild(nameDiv);
-
-                        // Replace the img with the wrapper in the canvases map
-                        for (const canvas of canvases.values()) {
-                            const index = canvas.thumbnails.indexOf(img);
-                            if (index > -1) {
-                                canvas.thumbnails[index] = wrapper;
-                                break;
+                                placedThumbnails.add(savedThumb.originalFilename);
+                                isLayoutFrozen = true;
                             }
-                        }
-
-                        makeDraggable(wrapper);
-                        
-                        nameDiv.addEventListener('dblclick', () => {
-                            nameDiv.contentEditable = true;
-                            nameDiv.focus();
                         });
-
-                        nameDiv.addEventListener('blur', () => {
-                            nameDiv.contentEditable = false;
-                            // Update the image's data attribute with the new name
-                            const newName = nameDiv.textContent;
-                            img.dataset.fileName = newName;
-                            wrapper.dataset.fileName = newName;
-                        });
-
-
                     });
                     
-                    populateCanvasDropdown();
-                    renderCanvas(activeCanvasId);
-                });
+                    // Add any newly found thumbnails (not in save data) to the first canvas
+                    const defaultCanvas = canvases.get(canvases.keys().next().value || 1);
+                    if(defaultCanvas) {
+                        for (const [fileName, wrapper] of wrapperMap.entries()) {
+                            if (!placedThumbnails.has(fileName)) {
+                                defaultCanvas.thumbnails.push(wrapper);
+                            }
+                        }
+                    }
+
+                    if (!canvases.has(activeCanvasId)) {
+                        activeCanvasId = canvases.keys().next().value || 1;
+                    }
+
+                } catch (err) {
+                    console.warn("Could not restore canvas from saved data. Loading fresh.", err);
+                    projectData.canvases = null;
+                    saveProjectData(directoryName, projectData);
+                    canvases.clear();
+                    canvases.set(1, { id: 1, name: 'Canvas 1', thumbnails: Array.from(wrapperMap.values()), settings: { thumbnailSize: '1' } });
+                    activeCanvasId = 1;
+                    isLayoutFrozen = false;
+                }
+
+                if (!Array.from(canvases.values()).find(c => c.name === 'Renamed')) {
+                    const renamedCanvasId = getNextCanvasId();
+                    canvases.set(renamedCanvasId, { id: renamedCanvasId, name: 'Renamed', thumbnails: [], settings: { thumbnailSize: '1' } });
+                }
+                
+                if (projectData.preEditModeCanvasMap) {
+                    const restoreThumbnailsFromPreEditMap = () => {
+                        const preEditMap = new Map(Object.entries(projectData.preEditModeCanvasMap));
+                        
+                        const allLoadedThumbsMap = new Map();
+                        for (const canvas of canvases.values()) {
+                            for (const thumb of canvas.thumbnails) {
+                                if (!allLoadedThumbsMap.has(thumb.dataset.fileName)) {
+                                    allLoadedThumbsMap.set(thumb.dataset.fileName, thumb);
+                                }
+                            }
+                        }
+
+                        for (const canvas of canvases.values()) {
+                            canvas.thumbnails = [];
+                        }
+
+                        for (const [fileName, canvasId] of preEditMap.entries()) {
+                            const thumb = allLoadedThumbsMap.get(fileName);
+                            if (thumb) {
+                                const targetCanvas = canvases.get(parseInt(canvasId));
+                                if (targetCanvas) {
+                                    targetCanvas.thumbnails.push(thumb);
+                                    const canvasNamePlaceholder = thumb.querySelector('.canvas-name-placeholder');
+                                    if (canvasNamePlaceholder) {
+                                        canvasNamePlaceholder.textContent = targetCanvas.name;
+                                    }
+                                } else {
+                                    canvases.get(1)?.thumbnails.push(thumb);
+                                }
+                                allLoadedThumbsMap.delete(fileName);
+                            }
+                        }
+
+                        const defaultCanvas = canvases.get(1);
+                        if (defaultCanvas) {
+                            for (const thumb of allLoadedThumbsMap.values()) {
+                                defaultCanvas.thumbnails.push(thumb);
+                            }
+                        }
+
+                        delete projectData.preEditModeCanvasMap;
+                        saveProjectData(directoryName, projectData);
+                    };
+                    restoreThumbnailsFromPreEditMap();
+                }
+
+                populateCanvasDropdown();
+                renderCanvas(activeCanvasId);
 
             } else if (allVideoFiles.length > 0) {
                 generateBatchScript(allVideoFiles, directoryName);
@@ -2300,8 +3178,6 @@
             document.getElementById('download-edit-script-link').href = URL.createObjectURL(blob);
         }
 
-        window.onload = init;
-
         function generateFinalBatchScript() {
             const scriptLines = [
                 '# PowerShell Script to process video selections',
@@ -2399,8 +3275,6 @@
             const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
             document.getElementById('download-final-landscape-script-link').href = URL.createObjectURL(blob);
         }
-        
-        window.onload = init;
 
         document.getElementById('final-landscape-script-modal').querySelector('.close').addEventListener('click', () => {
             document.getElementById('final-landscape-script-modal').style.display = 'none';
@@ -2421,6 +3295,121 @@
         document.getElementById('reload-final-script-page-btn').addEventListener('click', () => {
             location.reload();
         });
+
+        document.getElementById('generate-move-rename-script-btn').addEventListener('click', () => {
+            generateMove_rename_script();
+            document.getElementById('move-rename-script-modal').style.display = 'block';
+        });
+
+        document.getElementById('move-rename-script-modal').querySelector('.close').addEventListener('click', () => {
+            document.getElementById('move-rename-script-modal').style.display = 'none';
+        });
+
+        document.getElementById('copy-move-rename-script-btn').addEventListener('click', () => {
+            const scriptTextArea = document.getElementById('move-rename-batch-script');
+            scriptTextArea.select();
+            navigator.clipboard.writeText(scriptTextArea.value).then(() => {
+                alert('Script copied to clipboard!');
+                document.getElementById('reload-move-rename-script-page-btn').style.display = 'inline-block';
+            });
+        });
+
+        document.getElementById('download-move-rename-script-link').addEventListener('click', () => {
+            document.getElementById('reload-move-rename-script-page-btn').style.display = 'inline-block';
+        });
+
+        document.getElementById('reload-move-rename-script-page-btn').addEventListener('click', () => {
+            location.reload();
+        });
+
+
+        function generateMove_rename_script() {
+            const scriptLines = [
+                '# PowerShell Script to move and rename files',
+                'Write-Host "Processing files..."',
+                ''
+            ];
+
+            const escapeString = (str) => `'${str.replace(/'/g, "''")}'`;
+            const renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
+
+            if (renamedCanvas) {
+                const thumbnailsInRenamed = renamedCanvas.thumbnails;
+                const groupedByBaseName = new Map();
+                
+                thumbnailsInRenamed.forEach(thumb => {
+                    const newName = thumb.dataset.fileName;
+                    if (!newName) return;
+                    const baseName = newName.replace(/ \(\d+\)$/, '');
+                    if (!groupedByBaseName.has(baseName)) {
+                        groupedByBaseName.set(baseName, []);
+                    }
+                    groupedByBaseName.get(baseName).push(thumb);
+                });
+
+                const finalRenames = new Map();
+                for (const [baseName, thumbnails] of groupedByBaseName.entries()) {
+                    thumbnails.sort((a, b) => {
+                        const numA = parseInt((a.dataset.fileName.match(/ \((\d+)\)$/) || [])[1] || 0, 10);
+                        const numB = parseInt((b.dataset.fileName.match(/ \((\d+)\)$/) || [])[1] || 0, 10);
+                        if (numA !== numB) return numA - numB;
+                        const originalA = a.querySelector('.thumbnail-name').dataset.originalFilename;
+                        const originalB = b.querySelector('.thumbnail-name').dataset.originalFilename;
+                        return originalA.localeCompare(originalB);
+                    });
+
+                    let counter = 1;
+                    thumbnails.forEach(thumb => {
+                        const finalNewName = `${baseName} (${counter})`;
+                        finalRenames.set(thumb.dataset.fileName, finalNewName);
+                        counter++;
+                    });
+                }
+                
+                thumbnailsInRenamed.forEach(thumb => {
+                    const originalThumbName = thumb.querySelector('.thumbnail-name').dataset.originalFilename;
+                    const newThumbName = finalRenames.get(thumb.dataset.fileName);
+                    
+                    const originalVideoName = originalThumbName.replace(/\.jpg$/, '.mp4');
+                    const videoFile = allVideoFiles.find(f => f.name === originalVideoName);
+
+                    if (videoFile) {
+                        const originalPathPrefix = videoFile.customPath ? `${videoFile.customPath}\\` : '';
+                        const originalVideoPath = originalPathPrefix + originalVideoName;
+                        const originalThumbPath = `Thumbnails\\${originalThumbName}`; // Assuming root thumbnails for simplicity, needs adjustment if thumbs are in subdirs
+                        const subDirThumbPath = videoFile.customPath ? `${videoFile.customPath}\\Thumbnails\\${originalThumbName}` : '';
+                        
+                        const newVideoName = newThumbName.replace(/\.jpg$/, '.mp4');
+
+                        // 1. Move the video file to the root directory first, if it's in a subdirectory
+                        if (videoFile.customPath) {
+                            scriptLines.push(`if (Test-Path -LiteralPath ${escapeString(originalVideoPath)}) { Move-Item -LiteralPath ${escapeString(originalVideoPath)} -Destination "." }`);
+                        }
+
+                        // 2. Rename the video file in the root directory
+                        scriptLines.push(`if (Test-Path -LiteralPath ${escapeString(originalVideoName)}) { Rename-Item -LiteralPath ${escapeString(originalVideoName)} -NewName ${escapeString(newVideoName)} }`);
+                        
+                        // 3. Move and rename the corresponding thumbnail
+                        if (subDirThumbPath) {
+                            scriptLines.push(`if (Test-Path -LiteralPath ${escapeString(subDirThumbPath)}) { Move-Item -LiteralPath ${escapeString(subDirThumbPath)} -Destination "Thumbnails\\" }`);
+                        }
+                        scriptLines.push(`if (Test-Path -LiteralPath ${escapeString(originalThumbPath)}) { Rename-Item -LiteralPath ${escapeString(originalThumbPath)} -NewName ${escapeString(newThumbName)} }`);
+
+                        scriptLines.push(''); // Add a blank line for readability
+                    }
+                });
+            }
+
+            scriptLines.push('');
+            scriptLines.push('Write-Host "Processing complete."');
+            scriptLines.push('Read-Host -Prompt "Press Enter to exit"');
+
+            const script = scriptLines.join('\r\n');
+            document.getElementById('move-rename-batch-script').value = script;
+            const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
+            document.getElementById('download-move-rename-script-link').href = URL.createObjectURL(blob);
+        }
+
 
         function generateBatchScript(videoFiles, dirName) {
             const scriptLines = [
@@ -2458,6 +3447,67 @@
         function downloadBatchFile() {
             alert('Once downloaded, move the ".bat" file into your video folder and double-click it to run.');
             reloadPageBtn.style.display = 'inline-block';
+        }
+
+        function generateOrphanDeletionScript(orphanedFiles) {
+            const scriptLines = [
+                '# PowerShell Script to delete orphaned thumbnails',
+                'Write-Host "Deleting orphaned thumbnail files (moving to Recycle Bin)..."',
+                ...orphanedFiles.map(file => `Remove-Item -LiteralPath "Thumbnails\\${file.name}"`),
+                'Write-Host "Deletion complete."',
+                'Read-Host -Prompt "Press Enter to exit"'
+            ];
+            const script = scriptLines.join('\r\n');
+            
+            // Re-use the main script modal
+            scriptModal.querySelector('h2').textContent = 'Delete Orphaned Thumbnails';
+            scriptModal.querySelector('p').textContent = 'This PowerShell script will move the orphaned thumbnails to the Recycle Bin.';
+            batchScriptTextArea.value = script;
+            downloadScriptLink.download = 'delete_orphans.ps1';
+
+            const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
+            downloadScriptLink.href = URL.createObjectURL(blob);
+            scriptModal.style.display = 'block';
+        }
+
+
+        function promptOrphanedThumbnails(orphanedFiles) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('orphaned-thumbnails-modal');
+                document.getElementById('orphaned-thumbnails-message').textContent = `Found ${orphanedFiles.length} thumbnail(s) without a matching video file. What would you like to do?`;
+                
+                const fileListDiv = document.getElementById('orphaned-files-list');
+                fileListDiv.innerHTML = orphanedFiles.map(f => `<div>${f.name}</div>`).join('');
+
+                const deleteBtn = document.getElementById('delete-orphans-script-btn');
+                const hideBtn = document.getElementById('hide-orphans-btn');
+                const hideForeverBtn = document.getElementById('hide-forever-orphans-btn');
+                const doNothingBtn = document.getElementById('do-nothing-orphans-btn');
+                const closeBtn = modal.querySelector('.close');
+
+                const cleanup = () => {
+                    // Replace buttons to remove event listeners
+                    deleteBtn.replaceWith(deleteBtn.cloneNode(true));
+                    hideBtn.replaceWith(hideBtn.cloneNode(true));
+                    hideForeverBtn.replaceWith(hideForeverBtn.cloneNode(true));
+                    doNothingBtn.replaceWith(doNothingBtn.cloneNode(true));
+                    closeBtn.replaceWith(closeBtn.cloneNode(true));
+                    modal.style.display = 'none';
+                };
+
+                deleteBtn.addEventListener('click', () => { cleanup(); resolve('delete'); }, { once: true });
+                hideBtn.addEventListener('click', () => { cleanup(); resolve('hide'); }, { once: true });
+                hideForeverBtn.addEventListener('click', () => { cleanup(); resolve('hideForever'); }, { once: true });
+                
+                const doNothingHandler = () => {
+                    cleanup();
+                    resolve('nothing');
+                };
+                doNothingBtn.addEventListener('click', doNothingHandler, { once: true });
+                closeBtn.addEventListener('click', doNothingHandler, { once: true });
+
+                modal.style.display = 'block';
+            });
         }
 
         reloadPageBtn.addEventListener('click', () => {
@@ -2580,52 +3630,133 @@
 
         document.getElementById('add-element-btn').addEventListener('click', () => addFilenamePart());
 
-        createFilenameButtonBtn.addEventListener('click', () => {
+        function openButtonEditor(buttonId) {
+            const projectData = loadProjectData(directoryName);
+            const { button, path } = findButtonPathById(projectData.customButtonTree, buttonId);
+
+            if (!button || !path) {
+                console.error("Button not found for editing:", buttonId);
+                return;
+            }
+
+            const elements = path.slice(1); 
+
+            filenameParts = [
+                { type: 'category', value: path[0] || '' },
+                ...elements.map(el => ({ type: 'element', value: el }))
+            ];
+            
+            // Store the original state for the copy-on-no-change logic
+            originalPartsForCopyCheck = JSON.stringify(filenameParts);
+
+            renderFilenameParts();
+            updateFilenamePreview();
+
+            // When copying, we are creating a NEW button, so the ID should be empty.
+            document.getElementById('editing-button-id').value = '';
+            createFilenameButtonBtn.textContent = 'Add Button';
+            document.getElementById('clone-filename-button-btn').style.display = 'none';
+            filenameBuilderModal.style.display = 'block';
+        }
+
+        function findButtonPathById(tree, id, currentPath = []) {
+            for (const node of tree) {
+                 if (node.type === 'button' && String(node.id) === String(id)) {
+                    return { button: node, path: [...currentPath, node.name] };
+                }
+                if (node.type === 'category' && node.children) {
+                    const result = findButtonPathById(node.children, id, [...currentPath, node.name]);
+                    if (result.button) return result;
+                }
+            }
+            return {};
+        }
+
+        function removeButtonFromTreeById(tree, id) {
+             if (!Array.isArray(tree)) return [];
+            
+            let filteredNodes = tree.filter(node => 
+                !(node.type === 'button' && String(node.id) === String(id))
+            );
+
+            return filteredNodes.map(node => {
+                if (node.type === 'category' && node.children) {
+                    node.children = removeButtonFromTreeById(node.children, id);
+                }
+                return node;
+            }).filter(node => !(node.type === 'category' && (!node.children || node.children.length === 0)));
+        }
+
+        function createOrUpdateButton() {
+            const editingButtonId = document.getElementById('editing-button-id').value;
+            const isUpdate = !!editingButtonId;
+
             const category = filenameParts[0]?.value.trim();
             if (!category) {
-                alert('A "Category" is required to create a button.');
+                alert('A "Category" is required.');
                 return;
             }
 
-            const elements = filenameParts.slice(1).map(p => p.value.trim()).filter(p => p);
+            let elements = filenameParts.slice(1).map(p => p.value.trim()).filter(p => p);
             if (elements.length === 0) {
-                alert('At least one "Element" is required to create a button.');
+                alert('At least one "Element" is required.');
                 return;
             }
+
+            // Logic to append "(Copy)" if no changes were made
+            const currentPartsString = JSON.stringify(filenameParts);
+            if (!isUpdate && currentPartsString === originalPartsForCopyCheck) {
+                const lastElementIndex = filenameParts.length - 1;
+                if (lastElementIndex > 0) { // Ensure there is an element to modify
+                    filenameParts[lastElementIndex].value += ' (Copy)';
+                    // Re-extract elements after modification
+                    elements = filenameParts.slice(1).map(p => p.value.trim()).filter(p => p);
+                }
+            }
             
-            // --- Save values to localStorage for future suggestions ---
             const projectData = loadProjectData(directoryName);
-            projectData.previousFilenameElements = projectData.previousFilenameElements || [];
+
+            // Save new elements to suggestions
             elements.forEach(el => {
-                if (el && !projectData.previousFilenameElements.includes(el)) {
-                    projectData.previousFilenameElements.push(el);
+                if (el && !projectData.previousFilenameElements?.includes(el)) {
+                    (projectData.previousFilenameElements = projectData.previousFilenameElements || []).push(el);
                 }
             });
-
-            projectData.previousFilenameCategories = projectData.previousFilenameCategories || [];
-            if (category && !projectData.previousFilenameCategories.includes(category)) {
-                projectData.previousFilenameCategories.push(category);
+            if (category && !projectData.previousFilenameCategories?.includes(category)) {
+                 (projectData.previousFilenameCategories = projectData.previousFilenameCategories || []).push(category);
             }
 
-            // --- Construct button data and save to the main tree ---
             let customButtonTree = projectData.customButtonTree;
+
+            if (isUpdate) {
+                customButtonTree = removeButtonFromTreeById(customButtonTree, editingButtonId);
+            }
             
-            const path = [category, ...elements];
-            const buttonData = {
-                fullButtonText: elements.map(p => `(${p})`).join(' ')
+            let path = [category, ...elements];
+            let buttonData = {
+                fullButtonText: elements.map(p => `(${p})`).join(' '),
+                id: isUpdate ? editingButtonId : Date.now() + Math.random()
             };
 
-            if (insertButtonIntoTree(customButtonTree, path, buttonData)) {
-                projectData.customButtonTree = customButtonTree;
-                saveProjectData(directoryName, projectData);
-                loadCustomButtons(projectData.customButtonTree, projectData.collapseState, projectData.buttonVisibility);
-                filenameBuilderModal.style.display = 'none';
-                populatePreviousElements(); // Refresh datalists for next time
-                populatePreviousCategories();
-            } else {
+            if (!insertButtonIntoTree(customButtonTree, path, buttonData)) {
                 alert('A button with this exact name and category structure already exists.');
+                if (isUpdate) { 
+                     loadCustomButtons(projectData.customButtonTree, projectData.collapseState, projectData.buttonVisibility);
+                }
+                return;
             }
-        });
+
+            projectData.customButtonTree = customButtonTree;
+            saveProjectData(directoryName, projectData);
+            loadCustomButtons(projectData.customButtonTree, projectData.collapseState, projectData.buttonVisibility);
+            filenameBuilderModal.style.display = 'none';
+            populatePreviousElements();
+            populatePreviousCategories();
+            originalPartsForCopyCheck = null; // Reset tracker
+        }
+        
+        createFilenameButtonBtn.addEventListener('click', () => createOrUpdateButton());
+
 
         async function loadCustomButtons(customButtonTree, collapseState, buttonVisibility) {
             if (!directoryName) {
@@ -2788,8 +3919,10 @@
         visibleButtonsModal.style.display = 'none';
     });
 
-        function updateBottomBar() {
+        function updateBottomBarInfo() {
             const infoDiv = document.getElementById('bottom-bar-info');
+
+            // Priority 1: Display info about sidebar buttons selected for removal.
             if (buttonsForRemoval.size === 1) {
                 const buttonId = buttonsForRemoval.values().next().value;
                 const projectData = loadProjectData(directoryName);
@@ -2802,27 +3935,35 @@
                         }
                         if (node.type === 'category' && node.children) {
                             const result = findButtonPath(node.children, id, [...currentPath, node.name]);
-                            if (result) {
-                                return result;
-                            }
+                            if (result) return result;
                         }
                     }
                     return null;
                 }
                 
                 const result = findButtonPath(customButtonTree, buttonId);
-
                 if (result && result.path.length > 0) {
                     const username = projectUsernameInput.value.trim() || 'username';
                     const category = result.path[0];
                     const fullButtonText = result.button.fullButtonText;
-                    infoDiv.textContent = `[${username}]_${category} ${fullButtonText}`;
+                    const constructedName = `[${username}]_${category} ${fullButtonText}`;
+                    infoDiv.textContent = constructedName.replace(/\s*\(\d+\)$/, '').trim();
                 } else {
-                    infoDiv.textContent = '1 item selected';
+                    infoDiv.textContent = '1 sidebar button selected';
                 }
+                 return; // Exit after showing button info
 
             } else if (buttonsForRemoval.size > 1) {
-                infoDiv.textContent = `${buttonsForRemoval.size} items selected`;
+                infoDiv.textContent = `${buttonsForRemoval.size} sidebar buttons selected`;
+                return; // Exit after showing button info
+            }
+
+            // Priority 2: Display info about selected thumbnails.
+            if (selectedThumbnails.size === 1) {
+                const singleThumbnail = selectedThumbnails.values().next().value;
+                infoDiv.textContent = singleThumbnail.dataset.fileName;
+            } else if (selectedThumbnails.size > 1) {
+                infoDiv.textContent = `${selectedThumbnails.size} items selected`;
             } else {
                 infoDiv.textContent = '';
             }
@@ -2831,13 +3972,16 @@
         function createSidebarButton(buttonData, path) {
             const { id, name, fullButtonText, specialType } = buttonData;
             
+            const container = document.createElement('div');
+            container.className = 'sidebar-button-container';
+            container.style.position = 'relative';
+
             const button = document.createElement('button');
-            button.textContent = name.replace(/[()]/g, ''); // Remove parentheses for display
+            button.textContent = name.replace(/[()]/g, '');
             button.dataset.id = id;
             const numElements = parseInt(document.getElementById('num-elements-input').value, 10);
-            button.style.paddingLeft = `${(numElements) * 8}px`; // Indent based on hierarchy depth
+            button.style.paddingLeft = `${(numElements) * 8}px`;
 
-            // Preserve selection state across re-renders
             if (buttonsForRemoval.has(String(id))) {
                 button.classList.add('selected-for-removal');
             }
@@ -2845,27 +3989,40 @@
             button.onclick = () => {
                 const buttonId = button.dataset.id;
                 const isCurrentlySelected = button.classList.contains('selected-for-removal');
+                const renameBtn = document.getElementById('rename-btn');
+                const buttonInfo = { id, name, fullButtonText, specialType, path };
 
                 if (isCurrentlySelected) {
                     buttonsForRemoval.delete(buttonId);
                     button.classList.remove('selected-for-removal');
+                    delete renameBtn.dataset.lastClicked;
+                    updatePreviewPanel(null); // Clear the preview
                 } else {
+                    // When switching to a new button, deselect any thumbnails that were manually selected.
+                    if (selectedThumbnails.size > 0) {
+                        selectedThumbnails.forEach(thumb => thumb.classList.remove('selected'));
+                        selectedThumbnails.clear();
+                    }
+                    
+                    document.querySelectorAll('#sidebar-scroll-container button.selected-for-removal').forEach(b => {
+                        b.classList.remove('selected-for-removal');
+                        buttonsForRemoval.delete(b.dataset.id);
+                    });
                     buttonsForRemoval.add(buttonId);
                     button.classList.add('selected-for-removal');
+                    
+                    renameBtn.dataset.lastClicked = JSON.stringify(buttonInfo);
+                    updatePreviewPanel(buttonInfo);
                 }
-                updateRemoveButtonState();
-                updateBottomBar();
-                
-                // For '+1' buttons, we highlight differently
-                if (specialType === 'plusOne') {
-                    highlightMatchingThumbnails(path, '', !isCurrentlySelected, true);
-                } else {
-                    highlightMatchingThumbnails(path, fullButtonText, !isCurrentlySelected, false);
-                }
+
+                updateSidebarActionButtonsState();
+                updateBottomBarInfo();
+                highlightMatchingThumbnails(path, fullButtonText, !isCurrentlySelected, specialType === 'plusOne');
             };
 
+
             const fontSize = document.getElementById('font-size-slider').value;
-            button.style.cssText += `
+             button.style.cssText += `
                 width: 100%; margin: 0; padding-top: 0; padding-bottom: 0; height: 36px;
                 background-color: #1877f2; color: #ffffff; border: 1px solid #444444;
                 border-top: none; border-radius: 0; font-size: ${fontSize}px; cursor: pointer;
@@ -2874,7 +4031,8 @@
             button.style.textAlign = 'left';
             
             adjustButtonFontSize(button);
-            return button;
+            container.appendChild(button);
+            return container;
         }
 
         function highlightMatchingThumbnails(path, fullButtonText, shouldSelect, isCategoryOnly) {
@@ -2916,6 +4074,7 @@
                 });
             }
             updatePlayButtonState();
+            updateBottomBarInfo();
         }
 
         function adjustButtonFontSize(button) {
@@ -2926,6 +4085,10 @@
         newFilenameBtn.addEventListener('click', () => {
             filenameBuilderModal.style.display = 'block';
             initializeFilenameBuilder();
+            // Reset to "create" mode
+            document.getElementById('editing-button-id').value = '';
+            createFilenameButtonBtn.textContent = 'Add Button';
+            document.getElementById('clone-filename-button-btn').style.display = 'none';
         });
 
         removeBtn.addEventListener('click', () => {
@@ -2962,7 +4125,9 @@
 
                 buttonsForRemoval.clear();
                 loadCustomButtons(projectData.customButtonTree, projectData.collapseState, projectData.buttonVisibility);
-                updateRemoveButtonState();
+                updateSidebarActionButtonsState();
+                updateBottomBarInfo();
+                updatePreviewPanel(); // Clear preview panel
             }
         });
 
@@ -2979,6 +4144,8 @@
             element.onmousedown = dragMouseDown;
 
             function dragMouseDown(e) {
+                const isPreview = !!element.closest('#preview-container');
+                
                 e = e || window.event;
                 e.preventDefault();
                 isDragging = false;
@@ -2987,7 +4154,7 @@
                 pos3 = e.clientX;
                 pos4 = e.clientY;
 
-                if (!isLayoutFrozen) {
+                if (!isLayoutFrozen && !isPreview) {
                     freezeLayout();
                 }
 
@@ -3013,11 +4180,12 @@
                 pos3 = e.clientX;
                 pos4 = e.clientY;
 
-                if (selectedThumbnails.has(element)) {
-                    selectedThumbnails.forEach(thumb => {
-                        const containerRect = thumbnailContainer.getBoundingClientRect();
-                        const elementRect = thumb.getBoundingClientRect();
-                        
+                const isPreview = !!element.closest('#preview-container');
+                const container = isPreview ? previewContainer : thumbnailContainer;
+                const selectionSet = isPreview ? selectedPreviewThumbnails : selectedThumbnails;
+
+                if (selectionSet.has(element)) {
+                    selectionSet.forEach(thumb => {
                         let newTop = thumb.offsetTop - pos2;
                         let newLeft = thumb.offsetLeft - pos1;
 
@@ -3028,9 +4196,6 @@
                         thumb.style.left = newLeft + "px";
                     });
                 } else {
-                    const containerRect = thumbnailContainer.getBoundingClientRect();
-                    const elementRect = element.getBoundingClientRect();
-                    
                     let newTop = element.offsetTop - pos2;
                     let newLeft = element.offsetLeft - pos1;
 
@@ -3043,46 +4208,47 @@
             }
 
             function closeDragElement() {
-                 if (!isDragging) {
+                const isPreview = !!element.closest('#preview-container');
+                 if (!isDragging) { // This is a click, not a drag
                     const wrapper = element;
-                    const clickEvent = mouseDownEvent;
-                    if (isMultiSelectMode || clickEvent.ctrlKey || clickEvent.metaKey) {
-                        if (selectedThumbnails.has(wrapper)) {
+                    const clickEvent = mouseDownEvent; // Use the stored mousedown event
+                    const selectionSet = isPreview ? selectedPreviewThumbnails : selectedThumbnails;
+                    
+                    if (isPreview) {
+                        if (selectionSet.has(wrapper)) {
                             wrapper.classList.remove('selected');
-                            selectedThumbnails.delete(wrapper);
+                            selectionSet.delete(wrapper);
                         } else {
                             wrapper.classList.add('selected');
-                            selectedThumbnails.add(wrapper);
+                            selectionSet.add(wrapper);
                         }
-                    } else {
-                        selectedThumbnails.forEach(t => t.classList.remove('selected'));
-                        selectedThumbnails.clear();
-                        wrapper.classList.add('selected');
-                        selectedThumbnails.add(wrapper);
+                    } else { // Main container logic
+                        if (isMultiSelectMode || (clickEvent && (clickEvent.ctrlKey || clickEvent.metaKey))) {
+                            if (selectionSet.has(wrapper)) {
+                                wrapper.classList.remove('selected');
+                                selectionSet.delete(wrapper);
+                            } else {
+                                wrapper.classList.add('selected');
+                                selectionSet.add(wrapper);
+                            }
+                        } else {
+                            selectionSet.forEach(t => t.classList.remove('selected'));
+                            selectionSet.clear();
+                            wrapper.classList.add('selected');
+                            selectionSet.add(wrapper);
+                        }
+                        updatePlayButtonState();
+                        updateBottomBarInfo();
                     }
-                    updatePlayButtonState();
                 }
 
                 document.onmouseup = null;
                 document.onmousemove = null;
 
-                const canvasData = {
-                    canvases: Array.from(canvases.values()).map(c => ({
-                        id: c.id,
-                        name: c.name,
-                        thumbnails: c.thumbnails.map(t => ({
-                            fileName: t.dataset.fileName,
-                            left: t.style.left,
-                            top: t.style.top,
-                            previousCanvasId: t.dataset.previousCanvasId
-                        }))
-                    })),
-                    activeCanvasId: activeCanvasId
-                };
-                const projectData = loadProjectData(directoryName);
-                projectData.canvases = canvasData;
-                saveProjectData(directoryName, projectData);
-                updateContentSpacer();
+                if (!isPreview && isDragging) { // Only save/update spacer if something was dragged in main container
+                    saveCanvasState();
+                    updateContentSpacer();
+                }
             }
         }
 
@@ -3112,15 +4278,17 @@
             const canvas = canvases.get(activeCanvasId);
             if (!canvas) return;
 
-            isLayoutFrozen = false; 
-            
+            isLayoutFrozen = false; // Allow grid to be recalculated
+
             if (sortBy === 'name') {
                 canvas.thumbnails.sort((a, b) => a.dataset.fileName.localeCompare(b.dataset.fileName));
             } else if (sortBy === 'random') {
                 canvas.thumbnails.sort(() => Math.random() - 0.5);
             }
-
             renderCanvas(activeCanvasId);
+            // After rendering a sorted grid, we immediately freeze it to capture positions
+            freezeLayout(); 
+            saveCanvasState();
         }
 
         function saveLayout() {
@@ -3185,17 +4353,17 @@
             }
             
             sizeSelector.value = layoutData.size;
-            applyThumbnailSize();
-
-            const thumbnails = document.querySelectorAll('.thumbnail');
-            thumbnails.forEach(thumb => {
-                const pos = layoutData.positions[thumb.dataset.fileName];
+            
+            const wrappers = thumbnailContainer.querySelectorAll('.thumbnail-wrapper');
+            wrappers.forEach(wrapper => {
+                const pos = layoutData.positions[wrapper.dataset.fileName];
                 if (pos) {
-                    thumb.style.left = pos.left;
-                    thumb.style.top = pos.top;
+                    wrapper.style.left = pos.left;
+                    wrapper.style.top = pos.top;
                 }
             });
-            updateContentSpacer();
+            layoutThumbnailsInGrid(); // This will handle applying the size and updating the spacer
+            saveCanvasState();
         }
 
         function deleteLayout() {
@@ -3217,17 +4385,20 @@
                 freezeLayout();
             }
 
-            const allThumbs = Array.from(document.querySelectorAll('.thumbnail'));
-            const thumbMap = new Map(allThumbs.map(t => [t.dataset.fileName, t]));
-            const groupedThumbs = new Set();
-            let currentY = 0;
+            const projectData = loadProjectData(directoryName);
+            const verticalPadding = parseInt(projectData.verticalPadding, 10) || 0;
+            const horizontalPadding = parseInt(projectData.horizontalPadding, 10) || 0;
 
-            // Sort groups by header name
+            const allWrappers = Array.from(thumbnailContainer.querySelectorAll('.thumbnail-wrapper'));
+            const wrapperMap = new Map(allWrappers.map(w => [w.dataset.fileName, w]));
+            const placedWrappers = new Set();
+            let currentY = verticalPadding;
+
             layoutData.sort((a, b) => a.Header.localeCompare(b.Header));
 
             layoutData.forEach(group => {
-                if (group.IsGroup) {
-                    let currentX = 0;
+                if (group.IsGroup && Array.isArray(group.AllChildren)) {
+                    let currentX = horizontalPadding;
                     let maxRowHeight = 0;
 
                     group.AllChildren.forEach(child => {
@@ -3235,48 +4406,50 @@
                         const videoFilename = pathParts[pathParts.length - 1];
                         const thumbFilename = videoFilename.substring(0, videoFilename.lastIndexOf('.')) + '.jpg';
                         
-                        const thumb = thumbMap.get(thumbFilename);
-                        if (thumb) {
-                            if (currentX + thumb.offsetWidth > thumbnailContainer.clientWidth) {
-                                currentX = 0;
-                                currentY += maxRowHeight + 20; // 20px vertical gap
+                        const wrapper = wrapperMap.get(thumbFilename);
+                        if (wrapper) {
+                            if (currentX > horizontalPadding && currentX + wrapper.offsetWidth > thumbnailContainer.clientWidth) {
+                                currentX = horizontalPadding;
+                                currentY += maxRowHeight + verticalPadding;
                                 maxRowHeight = 0;
                             }
-                            thumb.style.left = currentX + 'px';
-                            thumb.style.top = currentY + 'px';
-                            currentX += thumb.offsetWidth + 20; // 20px horizontal gap
-                            if (thumb.offsetHeight > maxRowHeight) {
-                                maxRowHeight = thumb.offsetHeight;
+                            wrapper.style.left = currentX + 'px';
+                            wrapper.style.top = currentY + 'px';
+                            currentX += wrapper.offsetWidth + horizontalPadding;
+                            if (wrapper.offsetHeight > maxRowHeight) {
+                                maxRowHeight = wrapper.offsetHeight;
                             }
-                            groupedThumbs.add(thumb);
+                            placedWrappers.add(wrapper);
                         }
                     });
-                     if (group.AllChildren.length > 0) {
-                        currentY += maxRowHeight + (thumbMap.values().next().value?.offsetHeight || 200);
+
+                    if (group.AllChildren.length > 0) {
+                        currentY += maxRowHeight + verticalPadding; // Move to the next row for the next group
                     }
                 }
             });
 
             // Handle ungrouped thumbnails
-            let currentX = 0;
+            let currentX = horizontalPadding;
             let maxRowHeight = 0;
-            allThumbs.forEach(thumb => {
-                if (!groupedThumbs.has(thumb)) {
-                    if (currentX + thumb.offsetWidth > thumbnailContainer.clientWidth) {
-                        currentX = 0;
-                        currentY += maxRowHeight + 20;
+            allWrappers.forEach(wrapper => {
+                if (!placedWrappers.has(wrapper)) {
+                    if (currentX > horizontalPadding && currentX + wrapper.offsetWidth > thumbnailContainer.clientWidth) {
+                        currentX = horizontalPadding;
+                        currentY += maxRowHeight + verticalPadding;
                         maxRowHeight = 0;
                     }
-                    thumb.style.left = currentX + 'px';
-                    thumb.style.top = currentY + 'px';
-                    currentX += thumb.offsetWidth + 20;
-                    if (thumb.offsetHeight > maxRowHeight) {
-                        maxRowHeight = thumb.offsetHeight;
+                    wrapper.style.left = currentX + 'px';
+                    wrapper.style.top = currentY + 'px';
+                    currentX += wrapper.offsetWidth + horizontalPadding;
+                    if (wrapper.offsetHeight > maxRowHeight) {
+                        maxRowHeight = wrapper.offsetHeight;
                     }
                 }
             });
 
             updateContentSpacer();
+            saveCanvasState();
         }
 
         function populateLayoutsDropdown() {
@@ -3377,6 +4550,8 @@
                 }
             });
             updatePlayButtonState();
+            updateBottomBarInfo();
+            saveCanvasState();
         }
 
         const resizer = document.getElementById('sidebar-resizer');
@@ -3404,6 +4579,214 @@
                 sidebar.style.width = newWidth + 'px';
             }
         }
+
+        previewBtn.addEventListener('click', () => {
+            const isHidden = rightSidebar.style.display === 'none';
+            rightSidebar.style.display = isHidden ? 'flex' : 'none';
+
+            if (directoryName) {
+                const projectData = loadProjectData(directoryName);
+                projectData.previewSidebarVisible = isHidden;
+                saveProjectData(directoryName, projectData);
+            }
+        });
+
+        document.getElementById('play-all-preview-btn').addEventListener('click', () => {
+            const previewThumbnails = Array.from(previewContainer.querySelectorAll('.thumbnail-wrapper'));
+            if (previewThumbnails.length > 0) {
+                playlist = previewThumbnails;
+                videoOverlay.style.display = 'flex';
+                loadVideo(0);
+            }
+        });
+
+        const rightResizer = document.getElementById('right-sidebar-resizer');
+        rightResizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+
+            const handleRightMouseUp = () => {
+                document.removeEventListener('mousemove', handleRightMouseMove);
+                document.removeEventListener('mouseup', handleRightMouseUp);
+                
+                if (directoryName) {
+                    const projectData = loadProjectData(directoryName);
+                    projectData.previewSidebarWidth = parseInt(rightSidebar.style.width, 10);
+                    saveProjectData(directoryName, projectData);
+                }
+            };
+
+            document.addEventListener('mousemove', handleRightMouseMove);
+            document.addEventListener('mouseup', handleRightMouseUp);
+        });
+
+        function handleRightMouseMove(e) {
+            const contentArea = document.getElementById('content-area');
+            const newWidth = contentArea.getBoundingClientRect().right - e.clientX;
+            if (newWidth > 100 && newWidth < 500) { // Min and max width
+                rightSidebar.style.width = newWidth + 'px';
+                if (sizeSelector.value !== 'list') {
+                    isLayoutFrozen = false; // Force unfreeze before recalculating
+                    layoutThumbnailsInGrid(); // Recalculate grid on resize
+                }
+            }
+        }
+
+        function updatePreviewPanel(buttonData) {
+            previewContainer.innerHTML = '';
+            if (!buttonData) {
+                return; // No button selected, so clear the panel and exit.
+            }
+
+            const { path, fullButtonText, specialType } = buttonData;
+            const isCategoryOnly = specialType === 'plusOne';
+            const username = projectUsernameInput.value.trim() || 'username';
+            const category = path[0];
+            const prefix = `[${username}]_${category}`;
+
+            const matchingThumbnails = [];
+            for (const canvas of canvases.values()) {
+                canvas.thumbnails.forEach(thumb => {
+                    const baseFilename = thumb.dataset.fileName.substring(0, thumb.dataset.fileName.lastIndexOf('.'));
+                    const filenameWithoutNumber = baseFilename.replace(/\s*\(\d+\)$/, '').trim();
+                    
+                    let matches = false;
+                    if (isCategoryOnly) {
+                        matches = filenameWithoutNumber === prefix;
+                    } else {
+                        const expectedFilenamePart = `${prefix} ${fullButtonText}`;
+                        matches = filenameWithoutNumber.startsWith(expectedFilenamePart);
+                    }
+
+                    if (matches) {
+                        matchingThumbnails.push(thumb);
+                    }
+                });
+            }
+
+            matchingThumbnails.sort((a, b) => a.dataset.fileName.localeCompare(b.dataset.fileName));
+
+            matchingThumbnails.forEach(thumb => {
+                const clone = thumb.cloneNode(true);
+                clone.style.position = 'relative';
+                clone.style.left = 'auto';
+                clone.style.top = 'auto';
+                clone.style.marginBottom = '5px';
+                clone.classList.remove('selected');
+
+                makeDraggable(clone);
+                
+                previewContainer.appendChild(clone);
+            });
+            
+            // Apply the layout after the DOM has been updated
+            requestAnimationFrame(() => {
+                const currentPreviewSize = document.getElementById('preview-size-selector').value;
+                layoutPreviewPane(currentPreviewSize);
+            });
+        }
+
+        function layoutPreviewPane(size) {
+            const container = document.getElementById('preview-container');
+            if (!container) return;
+            const wrappers = container.querySelectorAll('.thumbnail-wrapper');
+            const padding = 5;
+
+            // Clear any existing absolute positioning before recalculating
+            wrappers.forEach(w => {
+                w.style.position = 'relative';
+                w.style.left = '';
+                w.style.top = '';
+            });
+
+            if (size === 'list') {
+                wrappers.forEach(wrapper => {
+                    // Reset styles for list view
+                    wrapper.style.position = 'relative';
+                    wrapper.style.left = '';
+                    wrapper.style.top = '';
+                    wrapper.classList.add('list-view');
+                    const thumb = wrapper.querySelector('.thumbnail');
+                    if (thumb) {
+                        thumb.style.width = '128px'; // Fixed size for list view
+                        thumb.style.height = '72px';
+                    }
+                });
+            } else {
+                // GRID VIEW LOGIC
+                wrappers.forEach(wrapper => {
+                    wrapper.classList.remove('list-view');
+                    // Reset/set styles for grid view display
+                    const thumb = wrapper.querySelector('.thumbnail');
+                    if (thumb) thumb.style.display = ''; // Reset to default display (inline)
+
+                    const nameDiv = wrapper.querySelector('.thumbnail-name');
+                    if (nameDiv) nameDiv.style.display = 'none';
+                    
+                    const canvasNamePlaceholder = wrapper.querySelector('.canvas-name-placeholder');
+                    if (canvasNamePlaceholder) canvasNamePlaceholder.style.display = 'none';
+                    const newFilenamePlaceholder = wrapper.querySelector('.new-filename-placeholder');
+                    if (newFilenamePlaceholder) newFilenamePlaceholder.style.display = 'none';
+                });
+
+                const scale = parseFloat(size);
+                const containerWidth = container.clientWidth;
+                let xOffset = padding;
+                let yOffset = padding;
+                let maxRowHeight = 0;
+
+                wrappers.forEach(wrapper => {
+                    const thumb = wrapper.querySelector('.thumbnail');
+                    const nameDiv = wrapper.querySelector('.thumbnail-name');
+
+                    const originalWidth = parseFloat(thumb.dataset.originalWidth || 256);
+                    const originalHeight = parseFloat(thumb.dataset.originalHeight || 144);
+                    
+                    const scaledWidth = originalWidth * scale;
+                    const scaledHeight = originalHeight * scale;
+
+                    let nameHeight = 0;
+                    if (nameDiv) {
+                        const originalDisplay = nameDiv.style.display;
+                        nameDiv.style.display = 'block'; // Ensure it's visible for measurement
+                        nameDiv.style.maxWidth = scaledWidth + 'px';
+                        nameHeight = nameDiv.offsetHeight;
+                        nameDiv.style.display = originalDisplay;
+                    }
+
+                    const wrapperHeight = scaledHeight + nameHeight;
+
+                    if (xOffset + scaledWidth + padding > containerWidth && xOffset > padding) {
+                        xOffset = padding;
+                        yOffset += maxRowHeight + padding;
+                        maxRowHeight = 0;
+                    }
+                    
+                    wrapper.style.position = 'absolute';
+                    wrapper.style.left = xOffset + 'px';
+                    wrapper.style.top = yOffset + 'px';
+                    thumb.style.width = scaledWidth + 'px';
+                    thumb.style.height = scaledHeight + 'px';
+
+                    if (wrapperHeight > maxRowHeight) {
+                        maxRowHeight = wrapperHeight;
+                    }
+                    
+                    xOffset += scaledWidth + padding;
+                });
+            }
+        }
+        
+        const previewSizeSelector = document.getElementById('preview-size-selector');
+        previewSizeSelector.addEventListener('change', (event) => {
+            const newSize = event.target.value;
+            layoutPreviewPane(newSize);
+            if (directoryName) {
+                const projectData = loadProjectData(directoryName);
+                projectData.previewThumbnailSize = newSize;
+                saveProjectData(directoryName, projectData);
+            }
+        });
+
 
         generateEditThumbnailsNewBtn.addEventListener('click', () => {
             const trackingFileName = 'processed_edit_mode_videos.txt';
@@ -3531,6 +4914,64 @@
             URL.revokeObjectURL(url);
         });
 
+        function getBaseName(fileName) {
+            // First, try to match the pattern with a numerical suffix like " (1)"
+            const baseNameMatch = fileName.match(/^(.*) \(\d+\)\.\w+$/);
+            if (baseNameMatch && baseNameMatch[1]) {
+                return baseNameMatch[1];
+            }
+            // If it doesn't match, just remove the extension as a fallback.
+            const lastDotIndex = fileName.lastIndexOf('.');
+            if (lastDotIndex > 0) {
+                return fileName.substring(0, lastDotIndex);
+            }
+            return fileName; // Return the whole string if no extension found
+        }
+
+        document.getElementById('recalculate-suffix-btn').addEventListener('click', () => {
+            if (!directoryName) {
+                alert('Please load a directory first.');
+                return;
+            }
+
+            const renamedCanvas = Array.from(canvases.values()).find(c => c.name === 'Renamed');
+            if (!renamedCanvas || renamedCanvas.thumbnails.length === 0) {
+                alert('The "Renamed" canvas is empty. Nothing to recalculate.');
+                return;
+            }
+
+            const groupedByBase = new Map();
+            renamedCanvas.thumbnails.forEach(thumb => {
+                const baseName = getBaseName(thumb.dataset.fileName);
+                if (!groupedByBase.has(baseName)) {
+                    groupedByBase.set(baseName, []);
+                }
+                groupedByBase.get(baseName).push(thumb);
+            });
+
+            groupedByBase.forEach((thumbnails, baseName) => {
+                // Sort to ensure a consistent renumbering order
+                thumbnails.sort((a, b) => a.dataset.fileName.localeCompare(b.dataset.fileName));
+
+                thumbnails.forEach((thumb, index) => {
+                    const newSuffix = `(${index + 1})`;
+                    const newFilename = `${baseName} ${newSuffix}.jpg`;
+
+                    // Update all relevant places
+                    thumb.dataset.fileName = newFilename;
+                    thumb.querySelector('.thumbnail').dataset.fileName = newFilename;
+                    const nameDiv = thumb.querySelector('.thumbnail-name');
+                    if (nameDiv) nameDiv.textContent = newFilename;
+                    const newFilenamePlaceholder = thumb.querySelector('.new-filename-placeholder');
+                    if (newFilenamePlaceholder) newFilenamePlaceholder.textContent = newFilename;
+                });
+            });
+
+            saveCanvasState();
+            renderCanvas(renamedCanvas.id); // Re-render to show changes
+            alert('Suffixes in the "Renamed" canvas have been recalculated and compacted.');
+        });
+        
         document.getElementById('import-project-btn').addEventListener('click', () => {
             if (!directoryName) {
                 alert('Please load a directory first.');
@@ -3557,6 +4998,198 @@
             }
             input.click();
         });
+
+        window.onload = init;
+
+        // --- Test hook for Playwright ---
+        class MockFileHandle {
+            constructor(name) {
+                this.name = name;
+                this.kind = 'file';
+            }
+            async getFile() {
+                // Return a real 1x1 pixel GIF to ensure Image.onload fires.
+                const base64Gif = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                const byteCharacters = atob(base64Gif);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: 'image/gif'});
+                return new File([blob], this.name, { type: 'image/gif' });
+            }
+        }
+
+        class MockDirectoryHandle {
+            constructor(name, entries) {
+                this.name = name;
+                this.kind = 'directory';
+                this._entries = entries; // A map of names to handles
+            }
+
+            async getDirectoryHandle(name) {
+                const entry = this._entries.get(name);
+                if (entry && entry.kind === 'directory') {
+                    return entry;
+                }
+                throw new DOMException('NotFoundError');
+            }
+
+            async *values() {
+                for (const value of this._entries.values()) {
+                    yield value;
+                }
+            }
+        }
+        
+        document.getElementById('test-hook-load-dir').addEventListener('click', async () => {
+            console.log("Test hook for complete directory clicked");
+            const rootThumbnailsDir = new MockDirectoryHandle('Thumbnails', new Map([
+                ['video1.jpg', new MockFileHandle('video1.jpg')]
+            ]));
+            const landscapeThumbnailsDir = new MockDirectoryHandle('Thumbnails', new Map([
+                ['video2.jpg', new MockFileHandle('video2.jpg')]
+            ]));
+            const landscapeDir = new MockDirectoryHandle('Landscape', new Map([
+                ['video2.mp4', new MockFileHandle('video2.mp4')],
+                ['Thumbnails', landscapeThumbnailsDir]
+            ]));
+
+            const rootDir = new MockDirectoryHandle('verification-complete', new Map([
+                ['video1.mp4', new MockFileHandle('video1.mp4')],
+                ['Thumbnails', rootThumbnailsDir],
+                ['Landscape', landscapeDir]
+            ]));
+            
+            try {
+                await processDirectory(rootDir);
+                 console.log("processDirectory for complete dir finished");
+            } catch(e) {
+                console.error("Error in test hook processDirectory:", e);
+            }
+        });
+        
+        document.getElementById('test-hook-load-padding-dir').addEventListener('click', async () => {
+            console.log("Test hook for padding directory clicked");
+            const thumbnailsDir = new MockDirectoryHandle('Thumbnails', new Map([
+                ['video1.jpg', new MockFileHandle('video1.jpg')],
+                ['video2.jpg', new MockFileHandle('video2.jpg')],
+                ['video3.jpg', new MockFileHandle('video3.jpg')]
+            ]));
+
+            const rootDir = new MockDirectoryHandle('verification-padding', new Map([
+                ['video1.mp4', new MockFileHandle('video1.mp4')],
+                ['video2.mp4', new MockFileHandle('video2.mp4')],
+                ['video3.mp4', new MockFileHandle('video3.mp4')],
+                ['Thumbnails', thumbnailsDir]
+            ]));
+
+            try {
+                await processDirectory(rootDir);
+                 console.log("processDirectory for padding dir finished");
+            } catch(e) {
+                console.error("Error in test hook processDirectory:", e);
+            }
+        });
+
     </script>
 </body>
 </html>
+put');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = readerEvent => {
+                    try {
+                        const projectData = JSON.parse(readerEvent.target.result);
+                        // We can add more validation here, e.g., checking version
+                        saveProjectData(directoryName, projectData);
+                        alert('Project data imported successfully! Reloading...');
+                        location.reload();
+                    } catch (err) {
+                        alert('Failed to parse project file.');
+                    }
+                }
+                reader.readAsText(file);
+            }
+            input.click();
+        });
+
+        window.onload = init;
+
+        // --- Test hook for Playwright ---
+        class MockFileHandle {
+            constructor(name) {
+                this.name = name;
+                this.kind = 'file';
+            }
+            async getFile() {
+                // Return a real 1x1 pixel GIF to ensure Image.onload fires.
+                const base64Gif = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                const byteCharacters = atob(base64Gif);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: 'image/gif'});
+                return new File([blob], this.name, { type: 'image/gif' });
+            }
+        }
+
+        class MockDirectoryHandle {
+            constructor(name, entries) {
+                this.name = name;
+                this.kind = 'directory';
+                this._entries = entries; // A map of names to handles
+            }
+
+            async getDirectoryHandle(name) {
+                const entry = this._entries.get(name);
+                if (entry && entry.kind === 'directory') {
+                    return entry;
+                }
+                throw new DOMException('NotFoundError');
+            }
+
+            async *values() {
+                for (const value of this._entries.values()) {
+                    yield value;
+                }
+            }
+        }
+        
+        document.getElementById('test-hook-load-dir').addEventListener('click', async () => {
+            console.log("Test hook for complete directory clicked");
+            const rootThumbnailsDir = new MockDirectoryHandle('Thumbnails', new Map([
+                ['video1.jpg', new MockFileHandle('video1.jpg')]
+            ]));
+            const landscapeThumbnailsDir = new MockDirectoryHandle('Thumbnails', new Map([
+                ['video2.jpg', new MockFileHandle('video2.jpg')]
+            ]));
+            const landscapeDir = new MockDirectoryHandle('Landscape', new Map([
+                ['video2.mp4', new MockFileHandle('video2.mp4')],
+                ['Thumbnails', landscapeThumbnailsDir]
+            ]));
+
+            const rootDir = new MockDirectoryHandle('verification-complete', new Map([
+                ['video1.mp4', new MockFileHandle('video1.mp4')],
+                ['Thumbnails', rootThumbnailsDir],
+                ['Landscape', landscapeDir]
+            ]));
+            
+            try {
+                await processDirectory(rootDir);
+                 console.log("processDirectory for complete dir finished");
+            } catch(e) {
+                console.error("Error in test hook processDirectory:", e);
+            }
+        });
+
+    </script>
+</body>
+</html>
+
